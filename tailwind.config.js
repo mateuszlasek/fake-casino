@@ -12,6 +12,10 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                'casino-1': '#03001C',
+                'casino-2': '#301E67',
+            },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
