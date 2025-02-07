@@ -1,6 +1,9 @@
 <script setup>
 import { Link, Head } from '@inertiajs/vue3';
-import { LogIn, UserPlus } from 'lucide-vue-next';
+import { LogIn, UserPlus, Coins } from 'lucide-vue-next';
+import { ref } from 'vue';
+
+const coins = ref(0); // Placeholder for user coins
 </script>
 
 <template>
@@ -14,7 +17,12 @@ import { LogIn, UserPlus } from 'lucide-vue-next';
             <Link href="/casino">Casino</Link>
             <Link href="/contact">Contact</Link>
           </div>
-          <div class="space-x-4 flex items-center">
+          <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-2 bg-casino-2 px-3 py-2 rounded-lg ">
+              <Coins class="w-5 h-5 text-yellow-400" />
+              <span class="text-yellow-400 font-semibold">{{ coins }}</span>
+            </div>
+
             <Link href="/login" class="flex items-center space-x-2 hover:text-yellow-400">
               <LogIn class="w-5 h-5" />
               <span>Login</span>

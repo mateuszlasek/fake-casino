@@ -6,9 +6,9 @@ import Layout from "@/Layouts/Layout.vue";
 <template>
    <Layout>
        <div>
-         <div class="container mx-auto flex flex-col md:flex-row items-center justify-between min-h-screen p-6">
-           <div class="w-full md:w-1/2 flex justify-center">
-             <img src="{{ asset('storage/images/cards.jpg') }}" alt="Placeholder for dice and cards" class="rounded-lg shadow-lg">
+         <div class="container mx-auto flex flex-col md:flex-row items-center justify-between min-h-screen p-4">
+           <div class="w-full md:w-1/2 flex justify-center mx-5">
+             <img src="/storage/images/cards_home.png" alt="Placeholder for dice and cards" class="rounded-lg shadow-lg">
            </div>
 
            <div class="w-full md:w-1/2 text-center md:text-left">
