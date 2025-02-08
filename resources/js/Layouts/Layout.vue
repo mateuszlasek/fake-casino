@@ -35,11 +35,10 @@ const isLoggedIn = computed(() => user.value !== null);
                                 <span>Logout</span>
                             </Link>
                             <Link
-                                :href="route('profile')"
-                                method="post"
+                                :href="route('dashboard')"
                                 class="flex items-center space-x-2 hover:text-yellow-400">
-                                <Dashboard class="w-5 h-5" />
-                                <span>Logout</span>
+                                <User class="w-5 h-5" />
+                                <span>Dashboard</span>
                             </Link>
                         </template>
 

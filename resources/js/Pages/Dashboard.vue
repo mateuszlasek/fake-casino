@@ -1,6 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
+import { defineProps } from 'vue';
+
+import Layout from "@/Layouts/Layout.vue";
+
+const props = defineProps({
+    users: Array // Oczekujemy tablicy użytkowników
+});
 </script>
 
 <template>
@@ -21,7 +28,12 @@ import { Head } from '@inertiajs/vue3';
                     class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
                 >
                     <div class="p-6 text-gray-900">
-                        You're logged in!
+                        <tr v-for="user in users" :key="user.id">
+                            <td class="px-4 py-2">{{ user.id }}</td>
+                            <td class="px-4 py-2">{{ user.name }}</td>
+                            <td class="px-4 py-2">{{ user.email }}</td>
+
+                        </tr>
                     </div>
                 </div>
             </div>
