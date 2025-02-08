@@ -5,7 +5,7 @@ import { defineProps, ref } from 'vue';
 import axios from 'axios';
 
 const selectedUserId = ref(null);
-const coins = ref(0);
+const balance = ref(0);
 const isPopupVisible = ref(false);
 
 const props = defineProps({
@@ -15,29 +15,29 @@ const props = defineProps({
 const openPopup = (userId) => {
     selectedUserId.value = userId;
     isPopupVisible.value = true;
-    coins.value = 0; // Reset wartości monet
+    balance.value = 0;
 };
 
 const closePopup = () => {
     isPopupVisible.value = false;
 };
 
-const assignCoins = () => {
+const assignBalance = () => {
     if (!selectedUserId.value) {
         alert('Error: User not selected.');
         return;
     }
 
-    axios.post('/assign-coins', {
+    axios.post('/assign-balance', {
         user_id: selectedUserId.value,
-        coins: coins.value
+        balance: balance.value
     })
         .then(response => {
             alert(response.data.message);
 
             const user = props.users.find(user => user.id === selectedUserId.value);
             if (user) {
-                user.coins = coins.value;
+                user.balance = balance.value;
             }
 
             closePopup();
@@ -69,7 +69,7 @@ const assignCoins = () => {
                                 <th class="px-4 py-2 border">ID</th>
                                 <th class="px-4 py-2 border">Name</th>
                                 <th class="px-4 py-2 border">Email</th>
-                                <th class="px-4 py-2 border">Coins</th>
+                                <th class="px-4 py-2 border">Balance</th>
                                 <th class="px-4 py-2 border">Actions</th>
                             </tr>
                             </thead>
@@ -78,12 +78,12 @@ const assignCoins = () => {
                                 <td class="px-4 py-2 border">{{ user.id }}</td>
                                 <td class="px-4 py-2 border">{{ user.name }}</td>
                                 <td class="px-4 py-2 border">{{ user.email }}</td>
-                                <td class="px-4 py-2 border">{{ user.coins }}</td>
+                                <td class="px-4 py-2 border">{{ user.balance }}</td>
                                 <td class="px-4 py-2 border">
                                     <button
                                         @click="openPopup(user.id)"
                                         class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg shadow">
-                                        Set coins
+                                        Set balance
                                     </button>
                                 </td>
                             </tr>
@@ -102,18 +102,18 @@ const assignCoins = () => {
                     class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
                     &times;
                 </button>
-                <h3 class="text-xl mb-4 font-semibold">Set Coins</h3>
-                <label for="coins" class="block text-sm font-medium text-gray-700">Coins</label>
+                <h3 class="text-xl mb-4 font-semibold">Set balance</h3>
+                <label for="balance" class="block text-sm font-medium text-gray-700">Balance</label>
                 <input
-                    id="coins"
-                    v-model="coins"
+                    id="balance"
+                    v-model="balance"
                     type="number"
                     min="1"
                     class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
                 <div class="mt-4 flex justify-end">
                     <button
-                        @click="assignCoins"
+                        @click="assignBalance"
                         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mr-2">
                         Set
                     </button>

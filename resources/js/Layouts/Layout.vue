@@ -4,28 +4,27 @@ import { LogIn, UserPlus, User, Coins, LogOut } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios'; // Ensure axios is imported
 
-const coins = ref(0);
+const balance = ref(0);
 const user = computed(() => usePage().props.auth?.user ?? null);
 const isLoggedIn = computed(() => user.value !== null);
 
-const getCoins = async () => {
+const getBalance = async () => {
     try {
-        const response = await axios.get('/get-coins', {
+        const response = await axios.get('/get-balance', {
             params: {
                 user_id: user.value.id
             }
         });
-        console.log('Coins response:', response.data);
-        coins.value = response.data.coins;
+        console.log('Balance response:', response.data);
+        balance.value = response.data.balance;
     } catch (error) {
-        console.error('Error fetching coins:', error);
+        console.error('Error fetching balance:', error);
     }
 };
 
-// Fetch coins when the component mounts
 onMounted(() => {
     if (isLoggedIn.value) {
-        getCoins();
+        getBalance();
     }
 });
 </script>
@@ -46,7 +45,7 @@ onMounted(() => {
                         <template v-if="isLoggedIn">
                             <div class="flex items-center space-x-2 px-3 py-2 ml-auto">
                                 <Coins class="w-5 h-5 text-yellow-400"/>
-                                <span class="text-yellow-400 font-semibold">{{ coins }}</span>
+                                <span class="text-yellow-400 font-semibold">{{ balance }}</span>
                             </div>
 
                             <div class="flex items-center space-x-2 ml-auto">

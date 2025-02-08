@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class CoinController extends Controller
+class BalanceController extends Controller
 {
-    public function assignCoins(Request $request)
+    public function assignBalance(Request $request)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'coins' => 'required|integer|min:1',
+            'balance' => 'required|integer|min:1',
         ]);
 
         $user = User::find($request->user_id);
@@ -20,16 +20,16 @@ class CoinController extends Controller
             return response()->json(['message' => 'User not found!'], 404);
         }
 
-        $user->coins = $request->coins;
+        $user->balance = $request->balance;
         $user->save();
 
         return response()->json([
-            'message' => 'Coins assigned successfully!',
-            'new_coins' => $user->coins
+            'message' => 'Balance assigned successfully!',
+            'new_balance' => $user->balance
         ]);
     }
 
-    public function getCoins(Request $request)
+    public function getBalance(Request $request)
     {
         $user = User::find($request->user_id);
 
@@ -37,7 +37,7 @@ class CoinController extends Controller
             return response()->json(['message' => 'User not found!'], 404);
         }
         return response()->json([
-            'coins' => $user->coins
+            'balance' => $user->balance
         ]);
     }
 }
