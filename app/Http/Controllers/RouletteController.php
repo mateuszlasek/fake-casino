@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class CasinoController extends Controller
+class RouletteController extends Controller
 {
     public function placeBet(Request $request)
     {
@@ -40,5 +40,12 @@ class CasinoController extends Controller
             'bet' => $bet,
             'new_balance' => $user->balance,
         ], 200);
+    }
+
+    public function spinWheel()
+    {
+        $number = rand(0,14);
+
+        return response()->json(['number' => $number]);
     }
 }

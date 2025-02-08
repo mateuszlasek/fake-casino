@@ -1,5 +1,6 @@
 <script>
 import Layout from "@/Layouts/Layout.vue";
+import axios from 'axios'; // Import Axiosa
 
 export default {
     components: {Layout},
@@ -28,39 +29,47 @@ export default {
         }
     },
     methods: {
-        spin() {
-            const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4]
-            const position = order.indexOf(parseInt(this.outcome))
+        async spin() {
+            try {
+                const response = await axios.get('/spin-wheel');
+                this.outcome = response.data.number;
 
-            if (position === -1) {
-                alert('Nieprawidłowy wynik!')
-                return
-            }
+                const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
+                const position = order.indexOf(parseInt(this.outcome));
 
-            const rows = 12
-            const card = 75 + 3 * 2
-            const landingPosition = (rows * 15 * card) + (position * card)
-            const randomize = Math.floor(Math.random() * 75) - (75/2)
-
-            const object = {
-                x: Math.floor(Math.random() * 50) / 100,
-                y: Math.floor(Math.random() * 20) / 100
-            }
-
-            this.wheelStyles = {
-                transitionTimingFunction: `cubic-bezier(0,${object.x},${object.y},1)`,
-                transitionDuration: '6s',
-                transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
-            }
-
-            setTimeout(() => {
-                const resetTo = -(position * card + randomize)
-                this.wheelStyles = {
-                    transitionTimingFunction: '',
-                    transitionDuration: '',
-                    transform: `translate3d(${resetTo}px, 0px, 0px)`
+                if (position === -1) {
+                    alert('Nieprawidłowy wynik!');
+                    return;
                 }
-            }, 6000)
+
+                const rows = 12;
+                const card = 75 + 3 * 2;
+                const landingPosition = (rows * 15 * card) + (position * card);
+                const randomize = Math.floor(Math.random() * 75) - (75 / 2);
+
+                const object = {
+                    x: Math.floor(Math.random() * 50) / 100,
+                    y: Math.floor(Math.random() * 20) / 100
+                };
+
+                this.wheelStyles = {
+                    transitionTimingFunction: `cubic-bezier(0,${object.x},${object.y},1)`,
+                    transitionDuration: '6s',
+                    transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
+                };
+
+                setTimeout(() => {
+                    const resetTo = -(position * card + randomize);
+                    this.wheelStyles = {
+                        transitionTimingFunction: '',
+                        transitionDuration: '',
+                        transform: `translate3d(${resetTo}px, 0px, 0px)`
+                    };
+                }, 6000);
+            } catch (error) {
+                console.error('Błąd podczas pobierania wyniku:', error);
+                alert('Wystąpił błąd podczas kręcenia kołem.');
+            }
         }
     }
 }
@@ -68,7 +77,6 @@ export default {
 
 <template>
     <Layout>
-
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
@@ -94,15 +102,15 @@ export default {
                 </div>
 
                 <div class="controls">
-                    <input v-model.number="outcome" placeholder="Value">
                     <button @click="spin">
                         Spin
                     </button>
                 </div>
             </div>
-            <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white">
 
-                <div class="flex justify-between space-x-4 w-full max-w-7xl px-4 text-white mt-8">
+            <!-- Sekcja z przyciskami i Total Bet -->
+            <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white mt-8">
+                <div class="flex justify-between space-x-4">
                     <div class="w-full">
                         <button class="btn-color w-full h-12 bg-red-500 hover:bg-red-600 rounded">
                             Red
@@ -111,7 +119,6 @@ export default {
                             Total Bet: 0
                         </div>
                     </div>
-
                     <div class="w-full">
                         <button class="btn-color w-full h-12 bg-green-600 hover:bg-green-700 rounded">
                             Green
@@ -119,9 +126,7 @@ export default {
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: 0
                         </div>
-
                     </div>
-
                     <div class="w-full">
                         <button class="btn-color w-full h-12 bg-gray-900 hover:bg-gray-800 rounded">
                             Black
@@ -132,13 +137,9 @@ export default {
                     </div>
                 </div>
             </div>
-
         </div>
-
-
     </Layout>
 </template>
-
 
 <style>
 body {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BalanceController;
+use App\Http\Controllers\RouletteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,9 @@ Route::inertia('/register', 'Register');
 
 Route::post('/assign-balance', [BalanceController::class, 'assignBalance']);
 Route::get('/get-balance', [BalanceController::class, 'getBalance']);
+
+Route::post('place-bet', [RouletteController::class, 'placeBet']);
+Route::get('spin-wheel', [RouletteController::class, 'spinWheel']);
 
 
 
