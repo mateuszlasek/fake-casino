@@ -1,36 +1,49 @@
 <template>
-    <div>
-        <div class="roulette-wrapper">
-            <div class="selector"></div>
-            <div class="wheel" :style="wheelStyles">
-                <div
-                    v-for="(row, index) in rows"
-                    :key="index"
-                    class="row"
-                >
-                    <div
-                        v-for="(card, cardIndex) in cards"
-                        :key="cardIndex"
-                        class="card"
-                        :class="card.color"
-                    >
-                        {{ card.number }}
+    <Layout>
+
+        <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
+
+            <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
+
+
+            <div class="w-full max-w-5xl px-4">
+                <div class="roulette-wrapper">
+                    <div class="selector"></div>
+                    <div class="wheel" :style="wheelStyles">
+                        <div
+                            v-for="(row, index) in rows"
+                            :key="index"
+                            class="row"
+                        >
+                            <div
+                                v-for="(card, cardIndex) in cards"
+                                :key="cardIndex"
+                                class="card"
+                                :class="card.color"
+                            >
+                                {{ card.number }}
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <div class="controls">
+                    <input v-model.number="outcome" placeholder="Wpisz wynik">
+                    <button @click="spin">
+                        Zakręć kołem
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="controls">
-            <input v-model.number="outcome" placeholder="Wpisz wynik">
-            <button @click="spin">
-                Zakręć kołem
-            </button>
-        </div>
-    </div>
+    </Layout>
 </template>
 
 <script>
+import Layout from "@/Layouts/Layout.vue";
+
 export default {
+    components: {Layout},
     data() {
         return {
             outcome: null,
@@ -108,6 +121,10 @@ body {
     width: 100%;
     margin: 0 auto;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);  /* Delikatne tło dla lepszego kontrastu */
+    border-radius: 12px;  /* Zaokrąglone rogi */
+    padding: 1rem 0;      /* Odstęp góra-dół */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);  /* Efekt "uniesienia" */
 }
 
 .roulette-wrapper .selector {
