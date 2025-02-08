@@ -14,7 +14,7 @@ class CoinController extends Controller
             'coins' => 'required|integer|min:1',
         ]);
 
-        $user = User::where('id', $request->user_id)->first();
+        $user = User::find($request->user_id);
 
         $user->coins += $request->coins;
 
