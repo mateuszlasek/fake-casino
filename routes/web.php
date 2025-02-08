@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CoinController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -15,6 +16,8 @@ Route::inertia('/contact', 'Contact');
 Route::inertia('/casino', 'Roulette');
 Route::inertia('/login', 'Login');
 Route::inertia('/register', 'Register');
+
+Route::post('/assign-coins', [CoinController::class, 'assignCoins']);
 
 
 
