@@ -1,44 +1,3 @@
-<template>
-    <Layout>
-
-        <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
-
-            <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
-
-
-            <div class="w-full max-w-5xl px-4">
-                <div class="roulette-wrapper">
-                    <div class="selector"></div>
-                    <div class="wheel" :style="wheelStyles">
-                        <div
-                            v-for="(row, index) in rows"
-                            :key="index"
-                            class="row"
-                        >
-                            <div
-                                v-for="(card, cardIndex) in cards"
-                                :key="cardIndex"
-                                class="card"
-                                :class="card.color"
-                            >
-                                {{ card.number }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="controls">
-                    <input v-model.number="outcome" placeholder="Wpisz wynik">
-                    <button @click="spin">
-                        Zakręć kołem
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </Layout>
-</template>
-
 <script>
 import Layout from "@/Layouts/Layout.vue";
 
@@ -47,7 +6,7 @@ export default {
     data() {
         return {
             outcome: null,
-            rows: Array(29).fill(null), // 29 rzędów jak w oryginalnym kodzie
+            rows: Array(29).fill(null),
             cards: [
                 { number: 1, color: 'red' },
                 { number: 14, color: 'black' },
@@ -107,6 +66,80 @@ export default {
 }
 </script>
 
+<template>
+    <Layout>
+
+        <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
+            <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
+
+            <div class="w-full max-w-5xl px-4">
+                <div class="roulette-wrapper">
+                    <div class="selector"></div>
+                    <div class="wheel" :style="wheelStyles">
+                        <div
+                            v-for="(row, index) in rows"
+                            :key="index"
+                            class="row"
+                        >
+                            <div
+                                v-for="(card, cardIndex) in cards"
+                                :key="cardIndex"
+                                class="card"
+                                :class="card.color"
+                            >
+                                {{ card.number }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <input v-model.number="outcome" placeholder="Value">
+                    <button @click="spin">
+                        Spin
+                    </button>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white">
+
+                <div class="flex justify-between space-x-4 w-full max-w-7xl px-4 text-white mt-8">
+                    <div class="w-full">
+                        <button class="btn-color w-full h-12 bg-red-500 hover:bg-red-600 rounded">
+                            Red
+                        </button>
+                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
+                            Total Bet: 0
+                        </div>
+                    </div>
+
+                    <div class="w-full">
+                        <button class="btn-color w-full h-12 bg-green-600 hover:bg-green-700 rounded">
+                            Green
+                        </button>
+                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
+                            Total Bet: 0
+                        </div>
+
+                    </div>
+
+                    <div class="w-full">
+                        <button class="btn-color w-full h-12 bg-gray-900 hover:bg-gray-800 rounded">
+                            Black
+                        </button>
+                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
+                            Total Bet: 0
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </Layout>
+</template>
+
+
 <style>
 body {
     font-family: 'Titillium Web', sans-serif;
@@ -121,10 +154,10 @@ body {
     width: 100%;
     margin: 0 auto;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);  /* Delikatne tło dla lepszego kontrastu */
-    border-radius: 12px;  /* Zaokrąglone rogi */
-    padding: 1rem 0;      /* Odstęp góra-dół */
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);  /* Efekt "uniesienia" */
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem 0;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .roulette-wrapper .selector {
@@ -164,7 +197,7 @@ body {
 
 .controls {
     margin-top: 20px;
-    text-align: center;
+    text-align: left;
 }
 
 .controls input {
