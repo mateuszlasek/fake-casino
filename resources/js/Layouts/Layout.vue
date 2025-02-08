@@ -1,6 +1,6 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
-import { LogIn, UserPlus, Coins, LogOut } from 'lucide-vue-next';
+import { LogIn, UserPlus, User, Coins, LogOut } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios'; // Ensure axios is imported
 
@@ -41,26 +41,28 @@ onMounted(() => {
                         <Link href="/casino">Casino</Link>
                         <Link href="/contact">Contact</Link>
                     </div>
-                    <div class="flex items-center space-x-6">
+                    <div class="flex space-x-6">
 
                         <template v-if="isLoggedIn">
-                            <div class="flex items-center space-x-2 bg-casino-2 px-3 py-2 rounded-lg">
+                            <div class="flex items-center space-x-2 px-3 py-2 ml-auto">
                                 <Coins class="w-5 h-5 text-yellow-400"/>
                                 <span class="text-yellow-400 font-semibold">{{ coins }}</span>
                             </div>
-                            <Link
-                                :href="route('logout')"
-                                method="post"
-                                class="flex items-center space-x-2 hover:text-yellow-400">
-                                <LogOut class="w-5 h-5"/>
-                                <span>Logout</span>
-                            </Link>
-                            <Link
-                                :href="route('dashboard')"
-                                class="flex items-center space-x-2 hover:text-yellow-400">
-                                <User class="w-5 h-5"/>
-                                <span>Dashboard</span>
-                            </Link>
+
+                            <div class="flex items-center space-x-2 ml-auto">
+                                <Link
+                                    :href="route('dashboard')"
+                                    class="flex items-center space-x-2 hover:text-yellow-400">
+                                    <User class="w-5 h-5"/>
+                                </Link>
+                                <Link
+                                    :href="route('logout')"
+                                    method="post"
+                                    class="flex items-center space-x-2 hover:text-yellow-400">
+                                    <LogOut class="w-5 h-5"/>
+                                    <span>Logout</span>
+                                </Link>
+                            </div>
                         </template>
 
                         <template v-else>
