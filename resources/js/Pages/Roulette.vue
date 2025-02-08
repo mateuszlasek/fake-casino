@@ -66,6 +66,8 @@ export default {
                         transform: `translate3d(${resetTo}px, 0px, 0px)`
                     };
                 }, 6000);
+
+                // checkBets(outcome);
             } catch (error) {
                 console.error('Błąd podczas pobierania wyniku:', error);
                 alert('Wystąpił błąd podczas kręcenia kołem.');
@@ -73,6 +75,11 @@ export default {
         }
     }
 }
+
+const checkBets = (outcome) => {
+    //axios post na check bets
+}
+
 </script>
 
 <template>

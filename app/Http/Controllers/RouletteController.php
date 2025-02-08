@@ -48,4 +48,46 @@ class RouletteController extends Controller
 
         return response()->json(['number' => $number]);
     }
+
+    public function checkBets(Request $request)
+    {
+        $user = auth()->user();
+        $betId = $request->input('bet_id');
+        $outcome = $request->input('outcome');
+
+        $bet = Bet::find($betId);
+
+        if (!$bet || $bet->user_id !== $user->id) {
+            return response()->json(['error' => 'Wrong bet'], 400);
+        }
+
+        $order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
+        $position = $order[$outcome];
+        $winningColor = $this->getColorByNumber($position);
+
+        if ($bet->color === $winningColor) {
+
+            if($bet->color === 'green') {
+                $user->balance += $bet->amount * 14;
+            }
+            else $user->balance += $bet->amount * 2;
+            $user->save();
+
+            return response()->json([
+                'message' => 'You won!',
+                'new_balance' => $user->balance,
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'You lost.',
+                'new_balance' => $user->balance,
+            ]);
+        }
+    }
+
+    private function getColorByNumber($number)
+    {
+        if ($number === 0) return 'green';
+        return in_array($number, [1, 3, 5, 7, 9, 12, 14]) ? 'red' : 'black';
+    }
 }
