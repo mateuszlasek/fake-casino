@@ -16,8 +16,16 @@ class CoinController extends Controller
 
         $user = User::find($request->user_id);
 
-        $user->coins += $request->coins;
+        if (!$user) {
+            return response()->json(['message' => 'User not found!'], 404);
+        }
 
-        return response()->json(['message' => 'Coins assigned successfully!']);
+        $user->coins = $request->coins;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Coins assigned successfully!',
+            'new_coins' => $user->coins
+        ]);
     }
 }
