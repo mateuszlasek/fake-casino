@@ -18,6 +18,7 @@ Route::inertia('/login', 'Login');
 Route::inertia('/register', 'Register');
 
 Route::post('/assign-coins', [CoinController::class, 'assignCoins']);
+Route::get('/get-coins', [CoinController::class, 'getCoins']);
 
 
 
