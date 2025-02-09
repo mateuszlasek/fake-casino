@@ -36,6 +36,10 @@ export default {
             activeBets: [],
             betAmount: 0,
             balance: this.$props.balance,
+            redPlayerTable: {},
+            greenPlayerTable: {},
+            blackPlayerTable: {},
+
         };
     },
     methods: {
@@ -83,6 +87,10 @@ export default {
                     this.totalBetBlack = 0;
                     this.totalBetGreen = 0;
 
+                    this.redPlayerTable = 0;
+                    this.greenPlayerTable = 0;
+                    this.blackPlayerTable = 0;
+
                     this.updateBalance();
                 }, 6000);
 
@@ -99,6 +107,8 @@ export default {
                     amount: this.betAmount,
                 });
 
+                this.addToPlayerTable(color);
+
                 this.activeBets.push(response.data.bet_id);
 
                 alert('Zakład przyjęty! Nowe saldo: ' + response.data.new_balance);
@@ -109,6 +119,16 @@ export default {
 
             } catch (error) {
                 alert('Błąd: ' + error.response.data.error);
+            }
+        },
+
+        addToPlayerTable(color) {
+            if (color === 'red') {
+                this.redPlayerTable[this.user.id] = (this.redPlayerTable[this.user.id] || 0) + this.betAmount;
+            } else if (color === 'green') {
+                this.greenPlayerTable[this.user.id] = (this.greenPlayerTable[this.user.id] || 0) + this.betAmount;
+            } else if (color === 'black') {
+                this.blackPlayerTable[this.user.id] = (this.blackPlayerTable[this.user.id] || 0) + this.betAmount;
             }
         },
 
@@ -215,17 +235,39 @@ export default {
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetRed }}
                         </div>
+                        <div
+                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
+                            v-for="(amount, userId) in redPlayerTable" :key="userId">
+
+                            <span>{{ user.name }}</span>
+                            <span>{{ amount }}</span>
+                        </div>
+
                     </div>
                     <div class="w-full">
                         <button @click="placeBet('green')" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">Green</button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetGreen }}
                         </div>
+                        <div
+                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
+                            v-for="(amount, userId) in greenPlayerTable" :key="userId">
+
+                            <span>{{ user.name }}</span>
+                            <span>{{ amount }}</span>
+                        </div>
                     </div>
                     <div class="w-full">
                         <button @click="placeBet('black')" class="w-full h-12 bg-gray-900 hover:bg-gray-800 rounded text-white">Black</button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetBlack }}
+                        </div>
+                        <div
+                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
+                            v-for="(amount, userId) in blackPlayerTable" :key="userId">
+
+                            <span>{{ user.name }}</span>
+                            <span>{{ amount }}</span>
                         </div>
                     </div>
                 </div>
