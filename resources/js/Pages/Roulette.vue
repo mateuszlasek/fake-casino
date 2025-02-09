@@ -87,9 +87,9 @@ export default {
                     this.totalBetBlack = 0;
                     this.totalBetGreen = 0;
 
-                    this.redPlayerTable = 0;
-                    this.greenPlayerTable = 0;
-                    this.blackPlayerTable = 0;
+                    this.redPlayerTable = {};
+                    this.greenPlayerTable = {};
+                    this.blackPlayerTable = {};
 
                     this.updateBalance();
                 }, 6000);
