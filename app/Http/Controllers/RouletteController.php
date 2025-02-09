@@ -6,9 +6,19 @@ use App\Models\Bet;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class RouletteController extends Controller
 {
+
+    public function showRoulettePage()
+    {
+        $user = auth()->user();
+        return Inertia::render('Roulette', [
+            'balance' => $user->balance,
+        ]);
+    }
+
     public function placeBet(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -42,14 +52,7 @@ class RouletteController extends Controller
         ], 200);
     }
 
-    public function spinWheel()
-    {
-        $number = rand(0,14);
-
-        return response()->json(['number' => $number]);
-    }
-
-    public function checkBets(Request $request)
+    public function spinWheel(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'activeBets' => 'required|array',
@@ -60,39 +63,32 @@ class RouletteController extends Controller
         }
 
         $activeBets = $request->input('activeBets', []);
-        $winningNumber = $request->input('winningNumber');
 
-        $order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
-        $position = $order[$winningNumber];
-        $winningColor = $this->getColorByNumber($position);
+        $winningNumber = rand(0, 14);
+        $winningColor = $this->getColorByNumber($winningNumber);
 
-        foreach ($activeBets as $betId) {
-            $bet = Bet::find($betId);
+        $bets = Bet::whereIn('id', $activeBets)->get();
 
-            if (!$bet) {
-                continue;
-            }
-
+        foreach ($bets as $bet) {
             $user = $bet->user;
 
             if ($bet->color === $winningColor) {
-
-                if($bet->color === 'green') {
+                if ($bet->color === 'green') {
                     $user->balance += $bet->amount * 14;
+                } else {
+                    $user->balance += $bet->amount * 2;
                 }
-                else $user->balance += $bet->amount * 2;
+
                 $user->save();
             }
         }
 
-        return response()->json([
-            'message' => 'Bet results',
-        ]);
+        return response()->json(['number' => $winningNumber]);
     }
 
     private function getColorByNumber($number)
     {
         if ($number === 0) return 'green';
-        return in_array($number, [1, 3, 5, 7, 9, 12, 14]) ? 'red' : 'black';
+        return in_array($number, [1, 2, 3, 4, 5, 6, 7]) ? 'red' : 'black';
     }
 }

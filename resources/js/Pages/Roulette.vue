@@ -3,7 +3,7 @@ import Layout from "@/Layouts/Layout.vue";
 import axios from 'axios'; // Import Axiosa
 
 export default {
-    components: {Layout},
+    components: { Layout },
     data() {
         return {
             outcome: null,
@@ -26,16 +26,19 @@ export default {
                 { number: 8, color: 'black' },
             ],
             wheelStyles: {},
-            totalBetRed: 0, // Suma zakładów na Red
-            totalBetGreen: 0, // Suma zakładów na Green
-            totalBetBlack: 0, // Suma zakładów na Black
+            totalBetRed: 0,
+            totalBetGreen: 0,
+            totalBetBlack: 0,
             activeBets: [],
-        }
+            betAmount: 0,
+        };
     },
     methods: {
         async spin() {
             try {
-                const response = await axios.get('/spin-wheel');
+                const response = await axios.post('/spin-wheel', {
+                    activeBets: this.activeBets
+                });
                 this.outcome = response.data.number;
 
                 const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
@@ -70,10 +73,6 @@ export default {
                         transform: `translate3d(${resetTo}px, 0px, 0px)`
                     };
                 }, 6000);
-
-                if(this.activeBets.length !== 0) {
-                    this.checkBets(this.activeBets, this.outcome);
-                }
             } catch (error) {
                 console.error('Błąd podczas pobierania wyniku:', error);
                 alert('Wystąpił błąd podczas kręcenia kołem.');
@@ -84,22 +83,19 @@ export default {
             try {
                 const response = await axios.post('/place-bet', {
                     color: color,
-                    amount: 10, // Stała kwota zakładu
+                    amount: this.betAmount,
                 });
 
                 this.activeBets.push(response.data.bet_id);
 
                 alert('Zakład przyjęty! Nowe saldo: ' + response.data.new_balance);
 
-                // Zaktualizuj Total Bet dla danego koloru
-                this.updateTotalBet(color, response.data.total_bet);
             } catch (error) {
                 alert('Błąd: ' + error.response.data.error);
             }
         },
 
         updateTotalBet(color, totalBet) {
-            // Zaktualizuj Total Bet dla danego koloru
             if (color === 'red') {
                 this.totalBetRed = totalBet;
             } else if (color === 'green') {
@@ -109,17 +105,17 @@ export default {
             }
         },
 
-        async checkBets(activeBets, winningNumber) {
-            try {
-                const response = await axios.post('/check-bets', {
-                    activeBets: activeBets,
-                    winningNumber: winningNumber
-                });
+        clearBet() {
+            this.betAmount = 0;
+        },
 
-            } catch (error) {
-                alert('Błąd: ' + error.response.data.error);
-            }
-        }
+        increaseBet(amount) {
+            this.betAmount += amount;
+        },
+
+        doubleBet() {
+            this.betAmount *= 2;
+        },
     }
 }
 </script>
@@ -149,43 +145,53 @@ export default {
                         </div>
                     </div>
                 </div>
-
-                <div class="controls">
-                    <button @click="spin">
-                        Spin
-                    </button>
-                </div>
             </div>
 
-            <!-- Sekcja z przyciskami i Total Bet -->
+            <div class="controls">
+                <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">Spin</button>
+            </div>
+
             <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white mt-8">
+                <!-- Balance and Bet Section in One Row -->
+                <div class="flex justify-between items-center space-x-4">
+                    <!-- Balance -->
+                    <div class="w-full">
+                        <div class="w-full bg-casino-2 mt-4 p-2 text-left rounded">
+                            Balance: <span class="font-bold">0 Credits</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 w-full">
+                        <input
+                            v-model="betAmount"
+                            type="number"
+                            min="1"
+                            class="w-2/3 h-12 bg-gray-800 text-white p-2 rounded"
+                            placeholder="Enter bet amount"
+                        />
+                        <div class="w-1/3 flex space-x-2">
+                            <button @click="clearBet" class="w-16 h-12 bg-gray-600 hover:bg-gray-700 rounded text-white">Clear</button>
+                            <button @click="increaseBet(10)" class="w-16 h-12 bg-green-600 hover:bg-green-700 rounded text-white">+10</button>
+                            <button @click="increaseBet(100)" class="w-16 h-12 bg-blue-600 hover:bg-blue-700 rounded text-white">+100</button>
+                            <button @click="doubleBet" class="w-16 h-12 bg-yellow-600 hover:bg-yellow-700 rounded text-white">x2</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex justify-between space-x-4">
                     <div class="w-full">
-                        <button
-                            @click="placeBet('red')"
-                            class="btn-color w-full h-12 bg-red-500 hover:bg-red-600 rounded">
-                            Red
-                        </button>
+                        <button @click="placeBet('red')" class="w-full h-12 bg-red-500 hover:bg-red-600 rounded text-white">Red</button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetRed }}
                         </div>
                     </div>
                     <div class="w-full">
-                        <button
-                            @click="placeBet('green')"
-                            class="btn-color w-full h-12 bg-green-600 hover:bg-green-700 rounded">
-                            Green
-                        </button>
+                        <button @click="placeBet('green')" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">Green</button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetGreen }}
                         </div>
                     </div>
                     <div class="w-full">
-                        <button
-                            @click="placeBet('black')"
-                            class="btn-color w-full h-12 bg-gray-900 hover:bg-gray-800 rounded">
-                            Black
-                        </button>
+                        <button @click="placeBet('black')" class="w-full h-12 bg-gray-900 hover:bg-gray-800 rounded text-white">Black</button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetBlack }}
                         </div>

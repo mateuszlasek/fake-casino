@@ -14,7 +14,7 @@ Route::get('/', function () {
 
 Route::inertia('/about', 'About');
 Route::inertia('/contact', 'Contact');
-Route::inertia('/casino', 'Roulette');
+Route::inertia('/casino', 'Roulette' );
 Route::inertia('/login', 'Login');
 Route::inertia('/register', 'Register');
 
@@ -22,8 +22,7 @@ Route::post('/assign-balance', [BalanceController::class, 'assignBalance']);
 Route::get('/get-balance', [BalanceController::class, 'getBalance']);
 
 Route::post('place-bet', [RouletteController::class, 'placeBet']);
-Route::get('spin-wheel', [RouletteController::class, 'spinWheel']);
-Route::post('/check-bets', [RouletteController::class, 'checkBets']);
+Route::post('spin-wheel', [RouletteController::class, 'spinWheel']);
 
 
 
