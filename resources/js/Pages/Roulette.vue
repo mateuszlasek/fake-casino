@@ -152,30 +152,30 @@ export default {
             </div>
 
             <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white mt-8">
-                <!-- Balance and Bet Section in One Row -->
-                <div class="flex justify-between items-center space-x-4">
-                    <!-- Balance -->
-                    <div class="w-full">
-                        <div class="w-full bg-casino-2 mt-4 p-2 text-left rounded">
-                            Balance: <span class="font-bold">0 Credits</span>
-                        </div>
+                <div class="flex justify-between items-center space-x-4 w-full">
+                    <div class="w-1/3 mt-4 p-4 text-left rounded">
+                        Balance: <span class="font-bold">0 Credits</span>
                     </div>
-                    <div class="flex space-x-2 w-full">
+
+                    <div class="w-2/3 bg-casino-2 mt-4 p-4 space-x-2 rounded flex">
                         <input
                             v-model="betAmount"
                             type="number"
                             min="1"
-                            class="w-2/3 h-12 bg-gray-800 text-white p-2 rounded"
+                            class="w-1/4 bg-casino-2 text-white rounded"
                             placeholder="Enter bet amount"
                         />
-                        <div class="w-1/3 flex space-x-2">
-                            <button @click="clearBet" class="w-16 h-12 bg-gray-600 hover:bg-gray-700 rounded text-white">Clear</button>
-                            <button @click="increaseBet(10)" class="w-16 h-12 bg-green-600 hover:bg-green-700 rounded text-white">+10</button>
-                            <button @click="increaseBet(100)" class="w-16 h-12 bg-blue-600 hover:bg-blue-700 rounded text-white">+100</button>
-                            <button @click="doubleBet" class="w-16 h-12 bg-yellow-600 hover:bg-yellow-700 rounded text-white">x2</button>
+                        <div class="w-3/4 flex space-x-2 ">
+                            <button @click="clearBet" class="w-1/4  bg-gray-600 hover:bg-gray-700 rounded text-white">Clear</button>
+                            <button @click="increaseBet(10)" class="w-1/4  bg-gray-600 hover:bg-gray-700 rounded text-white">+10</button>
+                            <button @click="increaseBet(100)" class="w-1/4 bg-gray-600 hover:bg-gray-700 rounded text-white">+100</button>
+                            <button @click="doubleBet" class="w-1/4 bg-gray-600 hover:bg-gray-700 rounded text-white">x2</button>
+                            <button @click="doubleBet" class="w-1/4 bg-red-500 hover:bg-red-600 rounded text-white">MAX</button>
+
                         </div>
                     </div>
                 </div>
+
 
                 <div class="flex justify-between space-x-4">
                     <div class="w-full">
