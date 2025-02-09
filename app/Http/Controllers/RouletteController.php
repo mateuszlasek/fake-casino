@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bet;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
@@ -16,6 +17,7 @@ class RouletteController extends Controller
         $user = auth()->user();
         return Inertia::render('Roulette', [
             'balance' => $user->balance,
+            'user' => Auth::user()
         ]);
     }
 

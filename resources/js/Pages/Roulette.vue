@@ -5,7 +5,8 @@ import axios from 'axios';
 export default {
     components: { Layout },
     props: {
-        balance: Number
+        balance: Number,
+        user: Object
     },
     data() {
         return {
@@ -76,9 +77,15 @@ export default {
                         transitionDuration: '',
                         transform: `translate3d(${resetTo}px, 0px, 0px)`
                     };
+
+                    this.activeBets = [];
+                    this.totalBetRed = 0;
+                    this.totalBetBlack = 0;
+                    this.totalBetGreen = 0;
+
+                    this.updateBalance();
                 }, 6000);
 
-                // updateBalance();
             } catch (error) {
                 console.error('Błąd podczas pobierania wyniku:', error);
                 alert('Wystąpił błąd podczas kręcenia kołem.');
@@ -99,6 +106,21 @@ export default {
                 this.updateTotalBet(color, this.betAmount);
 
                 this.balance = response.data.new_balance;
+
+            } catch (error) {
+                alert('Błąd: ' + error.response.data.error);
+            }
+        },
+
+        async updateBalance() {
+            try {
+                const response = await axios.get('/get-balance', {
+                    params: {
+                        user_id: this.user.id
+                    }
+                });
+
+                this.balance = response.data.balance;
 
             } catch (error) {
                 alert('Błąd: ' + error.response.data.error);
