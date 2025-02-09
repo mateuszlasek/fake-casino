@@ -1,9 +1,12 @@
 <script>
 import Layout from "@/Layouts/Layout.vue";
-import axios from 'axios'; // Import Axiosa
+import axios from 'axios';
 
 export default {
     components: { Layout },
+    props: {
+        balance: Number
+    },
     data() {
         return {
             outcome: null,
@@ -31,6 +34,7 @@ export default {
             totalBetBlack: 0,
             activeBets: [],
             betAmount: 0,
+            balance: this.$props.balance,
         };
     },
     methods: {
@@ -73,6 +77,8 @@ export default {
                         transform: `translate3d(${resetTo}px, 0px, 0px)`
                     };
                 }, 6000);
+
+                // updateBalance();
             } catch (error) {
                 console.error('Błąd podczas pobierania wyniku:', error);
                 alert('Wystąpił błąd podczas kręcenia kołem.');
@@ -90,6 +96,10 @@ export default {
 
                 alert('Zakład przyjęty! Nowe saldo: ' + response.data.new_balance);
 
+                this.updateTotalBet(color, this.betAmount);
+
+                this.balance = response.data.new_balance;
+
             } catch (error) {
                 alert('Błąd: ' + error.response.data.error);
             }
@@ -97,11 +107,11 @@ export default {
 
         updateTotalBet(color, totalBet) {
             if (color === 'red') {
-                this.totalBetRed = totalBet;
+                this.totalBetRed += totalBet;
             } else if (color === 'green') {
-                this.totalBetGreen = totalBet;
+                this.totalBetGreen += totalBet;
             } else if (color === 'black') {
-                this.totalBetBlack = totalBet;
+                this.totalBetBlack += totalBet;
             }
         },
 
@@ -154,7 +164,7 @@ export default {
             <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white mt-8">
                 <div class="flex justify-between items-center space-x-4 w-full">
                     <div class="w-1/3 mt-4 p-4 text-left rounded">
-                        Balance: <span class="font-bold">0 Credits</span>
+                        Balance: <span class="font-bold">{{ balance }}</span>
                     </div>
 
                     <div class="w-2/3 bg-casino-2 mt-4 p-4 space-x-2 rounded flex">

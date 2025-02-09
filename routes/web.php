@@ -14,7 +14,7 @@ Route::get('/', function () {
 
 Route::inertia('/about', 'About');
 Route::inertia('/contact', 'Contact');
-Route::inertia('/casino', 'Roulette' );
+Route::get('/casino', [RouletteController::class, 'showRoulettePage'])->name('casino');
 Route::inertia('/login', 'Login');
 Route::inertia('/register', 'Register');
 
