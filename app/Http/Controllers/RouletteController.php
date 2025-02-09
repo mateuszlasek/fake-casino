@@ -37,7 +37,7 @@ class RouletteController extends Controller
 
         return response()->json([
             'message' => 'Bet placed',
-            'bet' => $bet,
+            'bet_id' => $bet->id,
             'new_balance' => $user->balance,
         ], 200);
     }
@@ -51,38 +51,43 @@ class RouletteController extends Controller
 
     public function checkBets(Request $request)
     {
-        $user = auth()->user();
-        $betId = $request->input('bet_id');
-        $outcome = $request->input('outcome');
+        $validator = Validator::make($request->all(), [
+            'activeBets' => 'required|array',
+        ]);
 
-        $bet = Bet::find($betId);
-
-        if (!$bet || $bet->user_id !== $user->id) {
-            return response()->json(['error' => 'Wrong bet'], 400);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
         }
+
+        $activeBets = $request->input('activeBets', []);
+        $winningNumber = $request->input('winningNumber');
 
         $order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
-        $position = $order[$outcome];
+        $position = $order[$winningNumber];
         $winningColor = $this->getColorByNumber($position);
 
-        if ($bet->color === $winningColor) {
+        foreach ($activeBets as $betId) {
+            $bet = Bet::find($betId);
 
-            if($bet->color === 'green') {
-                $user->balance += $bet->amount * 14;
+            if (!$bet) {
+                continue;
             }
-            else $user->balance += $bet->amount * 2;
-            $user->save();
 
-            return response()->json([
-                'message' => 'You won!',
-                'new_balance' => $user->balance,
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'You lost.',
-                'new_balance' => $user->balance,
-            ]);
+            $user = $bet->user;
+
+            if ($bet->color === $winningColor) {
+
+                if($bet->color === 'green') {
+                    $user->balance += $bet->amount * 14;
+                }
+                else $user->balance += $bet->amount * 2;
+                $user->save();
+            }
         }
+
+        return response()->json([
+            'message' => 'Bet results',
+        ]);
     }
 
     private function getColorByNumber($number)

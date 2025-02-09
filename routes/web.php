@@ -23,6 +23,8 @@ Route::get('/get-balance', [BalanceController::class, 'getBalance']);
 
 Route::post('place-bet', [RouletteController::class, 'placeBet']);
 Route::get('spin-wheel', [RouletteController::class, 'spinWheel']);
+Route::post('/check-bets', [RouletteController::class, 'checkBets']);
+
 
 
 
