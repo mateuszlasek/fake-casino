@@ -1,10 +1,17 @@
 <template>
-    <div class="roulette-wrapper">
-        <div class="selector"></div>
-        <div class="wheel" :style="wheelStyles">
-            <div v-for="(row, index) in rows" :key="index" class="row">
-                <div v-for="(card, cardIndex) in cards" :key="cardIndex" class="card" :class="card.color">
-                    {{ card.number }}
+    <div class="w-full max-w-5xl px-4">
+        <div class="roulette-wrapper">
+            <div class="selector"></div>
+            <div class="wheel" :style="wheelStyles">
+                <div v-for="(row, index) in rows" :key="index" class="row">
+                    <div
+                        v-for="(card, cardIndex) in cards"
+                        :key="cardIndex"
+                        class="card"
+                        :class="card.color"
+                    >
+                        {{ card.number }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -13,11 +20,21 @@
 
 <script>
 export default {
+    name: "RouletteWheel",
     props: {
-        wheelStyles: Object,
-        rows: Array,
-        cards: Array,
-    },
+        wheelStyles: {
+            type: Object,
+            default: () => ({})
+        },
+        rows: {
+            type: Array,
+            default: () => []
+        },
+        cards: {
+            type: Array,
+            default: () => []
+        }
+    }
 };
 </script>
 
@@ -69,20 +86,10 @@ export default {
 .card.red {
     background: #F95146;
 }
-
 .card.black {
     background: #2D3035;
 }
-
 .card.green {
     background: #00C74D;
-}
-
-@media (max-width: 768px) {
-    .roulette-wrapper .wheel .row .card {
-        height: 60px;
-        width: 60px;
-        font-size: 1.2em;
-    }
 }
 </style>

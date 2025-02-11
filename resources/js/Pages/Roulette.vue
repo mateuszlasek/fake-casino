@@ -1,214 +1,21 @@
-<script>
-import Layout from "@/Layouts/Layout.vue";
-import axios from 'axios';
-
-export default {
-    components: { Layout },
-    props: {
-        balance: Number,
-        user: Object
-    },
-    data() {
-        return {
-            outcome: null,
-            rows: Array(29).fill(null),
-            cards: [
-                { number: 1, color: 'red' },
-                { number: 14, color: 'black' },
-                { number: 2, color: 'red' },
-                { number: 13, color: 'black' },
-                { number: 3, color: 'red' },
-                { number: 12, color: 'black' },
-                { number: 4, color: 'red' },
-                { number: 0, color: 'green' },
-                { number: 11, color: 'black' },
-                { number: 5, color: 'red' },
-                { number: 10, color: 'black' },
-                { number: 6, color: 'red' },
-                { number: 9, color: 'black' },
-                { number: 7, color: 'red' },
-                { number: 8, color: 'black' },
-            ],
-            wheelStyles: {},
-            totalBetRed: 0,
-            totalBetGreen: 0,
-            totalBetBlack: 0,
-            activeBets: [],
-            betAmount: 0,
-            balance: this.$props.balance,
-            redPlayerTable: {},
-            greenPlayerTable: {},
-            blackPlayerTable: {},
-        };
-    },
-    methods: {
-        async spin() {
-            try {
-                const response = await axios.post('/spin-wheel', {
-                    activeBets: this.activeBets
-                });
-                this.outcome = response.data.number;
-
-                const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
-                const position = order.indexOf(parseInt(this.outcome));
-
-                if (position === -1) {
-                    alert('Nieprawidłowy wynik!');
-                    return;
-                }
-
-                const rows = 12;
-                const card = 75 + 3 * 2;
-                const landingPosition = (rows * 15 * card) + (position * card);
-                const randomize = Math.floor(Math.random() * 75) - (75 / 2);
-
-                const object = {
-                    x: Math.floor(Math.random() * 50) / 100,
-                    y: Math.floor(Math.random() * 20) / 100
-                };
-
-                this.wheelStyles = {
-                    transitionTimingFunction: `cubic-bezier(0,${object.x},${object.y},1)`,
-                    transitionDuration: '6s',
-                    transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
-                };
-
-                setTimeout(() => {
-                    const resetTo = -(position * card + randomize);
-                    this.wheelStyles = {
-                        transitionTimingFunction: '',
-                        transitionDuration: '',
-                        transform: `translate3d(${resetTo}px, 0px, 0px)`
-                    };
-
-                    this.activeBets = [];
-                    this.totalBetRed = 0;
-                    this.totalBetBlack = 0;
-                    this.totalBetGreen = 0;
-
-                    this.redPlayerTable = {};
-                    this.greenPlayerTable = {};
-                    this.blackPlayerTable = {};
-
-                    this.updateBalance();
-                }, 6000);
-
-            } catch (error) {
-                console.error('Błąd podczas pobierania wyniku:', error);
-                alert('Wystąpił błąd podczas kręcenia kołem.');
-            }
-        },
-
-        async placeBet(color) {
-            try {
-                const response = await axios.post('/place-bet', {
-                    color: color,
-                    amount: this.betAmount,
-                });
-
-                this.addToPlayerTable(color);
-
-                this.activeBets.push(response.data.bet_id);
-
-                alert('Zakład przyjęty! Nowe saldo: ' + response.data.new_balance);
-
-                this.updateTotalBet(color, this.betAmount);
-
-                this.balance = response.data.new_balance;
-
-            } catch (error) {
-                alert('Błąd: ' + error.response.data.error);
-            }
-        },
-
-        addToPlayerTable(color) {
-            if (color === 'red') {
-                this.redPlayerTable[this.user.id] = (this.redPlayerTable[this.user.id] || 0) + this.betAmount;
-            } else if (color === 'green') {
-                this.greenPlayerTable[this.user.id] = (this.greenPlayerTable[this.user.id] || 0) + this.betAmount;
-            } else if (color === 'black') {
-                this.blackPlayerTable[this.user.id] = (this.blackPlayerTable[this.user.id] || 0) + this.betAmount;
-            }
-        },
-
-        async updateBalance() {
-            try {
-                const response = await axios.get('/get-balance', {
-                    params: {
-                        user_id: this.user.id
-                    }
-                });
-
-                this.balance = response.data.balance;
-
-            } catch (error) {
-                alert('Błąd: ' + error.response.data.error);
-            }
-        },
-
-        updateTotalBet(color, totalBet) {
-            if (color === 'red') {
-                this.totalBetRed += totalBet;
-            } else if (color === 'green') {
-                this.totalBetGreen += totalBet;
-            } else if (color === 'black') {
-                this.totalBetBlack += totalBet;
-            }
-        },
-
-        clearBet() {
-            this.betAmount = 0;
-        },
-
-        increaseBet(amount) {
-            this.betAmount += amount;
-        },
-
-        doubleBet() {
-            this.betAmount *= 2;
-        },
-    }
-}
-</script>
-
 <template>
     <Layout>
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
-            <!-- Roulette wheel (left unchanged) -->
-            <div class="w-full max-w-5xl px-4">
-                <div class="roulette-wrapper">
-                    <div class="selector"></div>
-                    <div class="wheel" :style="wheelStyles">
-                        <div
-                            v-for="(row, index) in rows"
-                            :key="index"
-                            class="row"
-                        >
-                            <div
-                                v-for="(card, cardIndex) in cards"
-                                :key="cardIndex"
-                                class="card"
-                                :class="card.color"
-                            >
-                                {{ card.number }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Komponent ruletki -->
+            <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
 
-            <!-- Spin button -->
+            <!-- Przycisk Spin -->
             <div class="controls w-full max-w-5xl mt-6">
                 <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
                     Spin
                 </button>
             </div>
 
-            <!-- Betting controls -->
+            <!-- Kontrola zakładów -->
             <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
-                <!-- Balance and bet amount input/buttons -->
+                <!-- Sekcja salda i ustawiania kwoty zakładu -->
                 <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-1/3 mt-4 p-4 text-left rounded bg-casino-2">
                         Balance: <span class="font-bold">{{ balance }}</span>
@@ -241,7 +48,7 @@ export default {
                     </div>
                 </div>
 
-                <!-- Bet placement buttons for red, green, and black -->
+                <!-- Przycisk do obstawiania: red, green, black -->
                 <div class="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-1/3">
                         <button @click="placeBet('red')" class="w-full h-12 bg-red-500 hover:bg-red-600 rounded text-white">
@@ -252,7 +59,8 @@ export default {
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in redPlayerTable" :key="userId"
+                            v-for="(amount, userId) in redPlayerTable"
+                            :key="userId"
                         >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
@@ -267,7 +75,8 @@ export default {
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in greenPlayerTable" :key="userId"
+                            v-for="(amount, userId) in greenPlayerTable"
+                            :key="userId"
                         >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
@@ -282,7 +91,8 @@ export default {
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in blackPlayerTable" :key="userId"
+                            v-for="(amount, userId) in blackPlayerTable"
+                            :key="userId"
                         >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
@@ -294,60 +104,186 @@ export default {
     </Layout>
 </template>
 
+<script>
+import Layout from "@/Layouts/Layout.vue";
+import axios from "axios";
+import RouletteWheel from "@/Components/Roulette/RouletteWheel.vue";
+
+export default {
+    name: "Roulette",
+    components: {RouletteWheel, Layout },
+    props: {
+        balance: Number,
+        user: Object
+    },
+    data() {
+        return {
+            outcome: null,
+            rows: Array(29).fill(null),
+            cards: [
+                { number: 1, color: "red" },
+                { number: 14, color: "black" },
+                { number: 2, color: "red" },
+                { number: 13, color: "black" },
+                { number: 3, color: "red" },
+                { number: 12, color: "black" },
+                { number: 4, color: "red" },
+                { number: 0, color: "green" },
+                { number: 11, color: "black" },
+                { number: 5, color: "red" },
+                { number: 10, color: "black" },
+                { number: 6, color: "red" },
+                { number: 9, color: "black" },
+                { number: 7, color: "red" },
+                { number: 8, color: "black" }
+            ],
+            wheelStyles: {},
+            totalBetRed: 0,
+            totalBetGreen: 0,
+            totalBetBlack: 0,
+            activeBets: [],
+            betAmount: 0,
+            balance: this.$props.balance,
+            redPlayerTable: {},
+            greenPlayerTable: {},
+            blackPlayerTable: {}
+        };
+    },
+    methods: {
+        async spin() {
+            try {
+                const response = await axios.post("/spin-wheel", {
+                    activeBets: this.activeBets
+                });
+                this.outcome = response.data.number;
+
+                const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
+                const position = order.indexOf(parseInt(this.outcome));
+
+                if (position === -1) {
+                    alert("Nieprawidłowy wynik!");
+                    return;
+                }
+
+                const rows = 12;
+                const card = 75 + 3 * 2;
+                const landingPosition = rows * 15 * card + position * card;
+                const randomize = Math.floor(Math.random() * 75) - 75 / 2;
+
+                const object = {
+                    x: Math.floor(Math.random() * 50) / 100,
+                    y: Math.floor(Math.random() * 20) / 100
+                };
+
+                this.wheelStyles = {
+                    transitionTimingFunction: `cubic-bezier(0,${object.x},${object.y},1)`,
+                    transitionDuration: "6s",
+                    transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
+                };
+
+                setTimeout(() => {
+                    const resetTo = -(position * card + randomize);
+                    this.wheelStyles = {
+                        transitionTimingFunction: "",
+                        transitionDuration: "",
+                        transform: `translate3d(${resetTo}px, 0px, 0px)`
+                    };
+
+                    this.activeBets = [];
+                    this.totalBetRed = 0;
+                    this.totalBetBlack = 0;
+                    this.totalBetGreen = 0;
+
+                    this.redPlayerTable = {};
+                    this.greenPlayerTable = {};
+                    this.blackPlayerTable = {};
+
+                    this.updateBalance();
+                }, 6000);
+            } catch (error) {
+                console.error("Błąd podczas pobierania wyniku:", error);
+                alert("Wystąpił błąd podczas kręcenia kołem.");
+            }
+        },
+
+        async placeBet(color) {
+            try {
+                const response = await axios.post("/place-bet", {
+                    color: color,
+                    amount: this.betAmount
+                });
+
+                this.addToPlayerTable(color);
+
+                this.activeBets.push(response.data.bet_id);
+
+                alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
+
+                this.updateTotalBet(color, this.betAmount);
+
+                this.balance = response.data.new_balance;
+            } catch (error) {
+                alert("Błąd: " + error.response.data.error);
+            }
+        },
+
+        addToPlayerTable(color) {
+            if (color === "red") {
+                this.redPlayerTable[this.user.id] =
+                    (this.redPlayerTable[this.user.id] || 0) + this.betAmount;
+            } else if (color === "green") {
+                this.greenPlayerTable[this.user.id] =
+                    (this.greenPlayerTable[this.user.id] || 0) + this.betAmount;
+            } else if (color === "black") {
+                this.blackPlayerTable[this.user.id] =
+                    (this.blackPlayerTable[this.user.id] || 0) + this.betAmount;
+            }
+        },
+
+        async updateBalance() {
+            try {
+                const response = await axios.get("/get-balance", {
+                    params: {
+                        user_id: this.user.id
+                    }
+                });
+                this.balance = response.data.balance;
+            } catch (error) {
+                alert("Błąd: " + error.response.data.error);
+            }
+        },
+
+        updateTotalBet(color, totalBet) {
+            if (color === "red") {
+                this.totalBetRed += totalBet;
+            } else if (color === "green") {
+                this.totalBetGreen += totalBet;
+            } else if (color === "black") {
+                this.totalBetBlack += totalBet;
+            }
+        },
+
+        clearBet() {
+            this.betAmount = 0;
+        },
+
+        increaseBet(amount) {
+            this.betAmount += amount;
+        },
+
+        doubleBet() {
+            this.betAmount *= 2;
+        }
+    }
+};
+</script>
+
 <style>
 body {
-    font-family: 'Titillium Web', sans-serif;
-    background: #191B28;
+    font-family: "Titillium Web", sans-serif;
+    background: #191b28;
     margin: 0;
 }
-
-.roulette-wrapper {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin: 0 auto;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 1rem 0;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-}
-
-.roulette-wrapper .selector {
-    width: 3px;
-    background: grey;
-    left: 50%;
-    height: 100%;
-    transform: translate(-50%, 0%);
-    position: absolute;
-    z-index: 2;
-}
-
-.roulette-wrapper .wheel {
-    display: flex;
-}
-
-.roulette-wrapper .wheel .row {
-    display: flex;
-}
-
-.roulette-wrapper .wheel .row .card {
-    height: 75px;
-    width: 75px;
-    margin: 3px;
-    border-radius: 8px;
-    border-bottom: 3px solid rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5em;
-}
-
-.card.red { background: #F95146; }
-.card.black { background: #2D3035; }
-.card.green { background: #00C74D; }
 
 .controls {
     margin-top: 20px;
@@ -363,7 +299,7 @@ body {
 
 .controls button {
     padding: 8px 16px;
-    background: #00C74D;
+    background: #00c74d;
     color: white;
     border: none;
     border-radius: 4px;
