@@ -55,7 +55,6 @@ onMounted(() => {
                         </button>
                     </div>
 
-                    <!-- Desktop navigation -->
                     <div class="hidden md:flex space-x-6">
                         <Link href="/">Home</Link>
                         <Link href="/about">About</Link>
@@ -105,7 +104,6 @@ onMounted(() => {
                     </div>
                 </nav>
 
-                <!-- Mobile menu -->
                 <div v-if="isMobileMenuOpen" class="md:hidden">
                     <div class="px-4 pb-2 space-y-2">
                         <Link @click="closeMobileMenu" href="/" class="block py-2 hover:text-yellow-400">Home</Link>

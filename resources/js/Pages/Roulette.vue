@@ -5,8 +5,11 @@
 
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
 
-            <div class="controls w-full max-w-5xl mt-6">
-                <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
+            <div class="w-full max-w-5xl mt-6">
+                <button
+                    @click="spin"
+                    class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white text-lg font-semibold transition duration-300"
+                >
                     Spin
                 </button>
             </div>
@@ -46,7 +49,7 @@ import BetPlacementButtons from "@/Components/Roulette/BetPlacementButtons.vue";
 
 export default {
     name: "Roulette",
-    components: {BetPlacementButtons, BetAmountControls, BalanceDisplay, RouletteWheel, Layout },
+    components: { BetPlacementButtons, BetAmountControls, BalanceDisplay, RouletteWheel, Layout },
     props: {
         balance: Number,
         user: Object
@@ -174,7 +177,7 @@ export default {
                 });
                 this.balance = response.data.balance;
             } catch (error) {
-                alert("Błąd: " + error.response.data.error);
+                alert("Error: " + error.response.data.error);
             }
         },
         updateTotalBet(color, totalBet) {
@@ -192,32 +195,3 @@ export default {
     }
 };
 </script>
-
-<style>
-body {
-    font-family: "Titillium Web", sans-serif;
-    background: #191b28;
-    margin: 0;
-}
-.controls {
-    margin-top: 20px;
-    text-align: left;
-}
-.controls input {
-    padding: 8px;
-    margin-right: 10px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-}
-.controls button {
-    padding: 8px 16px;
-    background: #00c74d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-* {
-    box-sizing: border-box;
-}
-</style>
