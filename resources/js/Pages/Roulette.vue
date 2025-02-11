@@ -13,105 +13,46 @@
                 </button>
             </div>
 
-            <!-- Kontrola zakładów -->
+            <!-- Panel zakładów -->
             <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
-                <!-- Sekcja salda i ustawiania kwoty zakładu -->
                 <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
-                    <div class="w-full md:w-1/3 mt-4 p-4 text-left rounded bg-casino-2">
-                        Balance: <span class="font-bold">{{ balance }}</span>
-                    </div>
-                    <div class="w-full md:w-2/3 bg-casino-2 mt-4 p-4 rounded flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2">
-                        <input
-                            v-model="betAmount"
-                            type="number"
-                            min="1"
-                            class="w-full md:w-1/4 bg-casino-2 text-white rounded p-2"
-                            placeholder="Enter bet amount"
-                        />
-                        <div class="w-full md:w-3/4 flex flex-wrap md:flex-nowrap gap-2">
-                            <button @click="clearBet" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
-                                Clear
-                            </button>
-                            <button @click="increaseBet(10)" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
-                                +10
-                            </button>
-                            <button @click="increaseBet(100)" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
-                                +100
-                            </button>
-                            <button @click="doubleBet" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
-                                x2
-                            </button>
-                            <button @click="doubleBet" class="flex-1 bg-red-500 hover:bg-red-600 rounded text-white py-2">
-                                MAX
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Komponent wyświetlający stan konta -->
+                    <BalanceDisplay :balance="balance" />
+                    <!-- Komponent kontrolujący kwotę zakładu -->
+                    <BetAmountControls
+                        :betAmount="betAmount"
+                        @update:betAmount="betAmount = $event"
+                        @max-bet="handleMaxBet"
+                    />
                 </div>
 
-                <!-- Przycisk do obstawiania: red, green, black -->
-                <div class="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
-                    <div class="w-full md:w-1/3">
-                        <button @click="placeBet('red')" class="w-full h-12 bg-red-500 hover:bg-red-600 rounded text-white">
-                            Red
-                        </button>
-                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
-                            Total Bet: {{ totalBetRed }}
-                        </div>
-                        <div
-                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in redPlayerTable"
-                            :key="userId"
-                        >
-                            <span>{{ user.name }}</span>
-                            <span>{{ amount }}</span>
-                        </div>
-                    </div>
-                    <div class="w-full md:w-1/3">
-                        <button @click="placeBet('green')" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
-                            Green
-                        </button>
-                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
-                            Total Bet: {{ totalBetGreen }}
-                        </div>
-                        <div
-                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in greenPlayerTable"
-                            :key="userId"
-                        >
-                            <span>{{ user.name }}</span>
-                            <span>{{ amount }}</span>
-                        </div>
-                    </div>
-                    <div class="w-full md:w-1/3">
-                        <button @click="placeBet('black')" class="w-full h-12 bg-gray-900 hover:bg-gray-800 rounded text-white">
-                            Black
-                        </button>
-                        <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
-                            Total Bet: {{ totalBetBlack }}
-                        </div>
-                        <div
-                            class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in blackPlayerTable"
-                            :key="userId"
-                        >
-                            <span>{{ user.name }}</span>
-                            <span>{{ amount }}</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Komponent z przyciskami obstawiania -->
+                <BetPlacementButtons
+                    :redPlayerTable="redPlayerTable"
+                    :greenPlayerTable="greenPlayerTable"
+                    :blackPlayerTable="blackPlayerTable"
+                    :totalBetRed="totalBetRed"
+                    :totalBetGreen="totalBetGreen"
+                    :totalBetBlack="totalBetBlack"
+                    :user="user"
+                    @place-bet="placeBet"
+                />
             </div>
         </div>
     </Layout>
 </template>
 
 <script>
-import Layout from "@/Layouts/Layout.vue";
+import Layout from "@/layouts/Layout.vue";
 import axios from "axios";
 import RouletteWheel from "@/Components/Roulette/RouletteWheel.vue";
+import BalanceDisplay from "@/Components/Roulette/BalanceDisplay.vue";
+import BetAmountControls from "@/Components/Roulette/BetAmountControls.vue";
+import BetPlacementButtons from "@/Components/Roulette/BetPlacementButtons.vue";
 
 export default {
     name: "Roulette",
-    components: {RouletteWheel, Layout },
+    components: {BetPlacementButtons, BetAmountControls, BalanceDisplay, RouletteWheel, Layout },
     props: {
         balance: Number,
         user: Object
@@ -205,28 +146,21 @@ export default {
                 alert("Wystąpił błąd podczas kręcenia kołem.");
             }
         },
-
         async placeBet(color) {
             try {
                 const response = await axios.post("/place-bet", {
                     color: color,
                     amount: this.betAmount
                 });
-
                 this.addToPlayerTable(color);
-
                 this.activeBets.push(response.data.bet_id);
-
                 alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
-
                 this.updateTotalBet(color, this.betAmount);
-
                 this.balance = response.data.new_balance;
             } catch (error) {
                 alert("Błąd: " + error.response.data.error);
             }
         },
-
         addToPlayerTable(color) {
             if (color === "red") {
                 this.redPlayerTable[this.user.id] =
@@ -239,20 +173,16 @@ export default {
                     (this.blackPlayerTable[this.user.id] || 0) + this.betAmount;
             }
         },
-
         async updateBalance() {
             try {
                 const response = await axios.get("/get-balance", {
-                    params: {
-                        user_id: this.user.id
-                    }
+                    params: { user_id: this.user.id }
                 });
                 this.balance = response.data.balance;
             } catch (error) {
                 alert("Błąd: " + error.response.data.error);
             }
         },
-
         updateTotalBet(color, totalBet) {
             if (color === "red") {
                 this.totalBetRed += totalBet;
@@ -262,17 +192,9 @@ export default {
                 this.totalBetBlack += totalBet;
             }
         },
-
-        clearBet() {
-            this.betAmount = 0;
-        },
-
-        increaseBet(amount) {
-            this.betAmount += amount;
-        },
-
-        doubleBet() {
-            this.betAmount *= 2;
+        handleMaxBet() {
+            // Przykładowa logika ustawiania maksymalnego zakładu
+            this.betAmount = this.balance;
         }
     }
 };
@@ -284,19 +206,16 @@ body {
     background: #191b28;
     margin: 0;
 }
-
 .controls {
     margin-top: 20px;
     text-align: left;
 }
-
 .controls input {
     padding: 8px;
     margin-right: 10px;
     border-radius: 4px;
     border: 1px solid #ccc;
 }
-
 .controls button {
     padding: 8px 16px;
     background: #00c74d;
@@ -305,7 +224,6 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
-
 * {
     box-sizing: border-box;
 }
