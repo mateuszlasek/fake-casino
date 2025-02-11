@@ -3,22 +3,17 @@
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
-            <!-- Komponent ruletki -->
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
 
-            <!-- Przycisk Spin -->
             <div class="controls w-full max-w-5xl mt-6">
                 <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
                     Spin
                 </button>
             </div>
 
-            <!-- Panel zakładów -->
             <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
-                    <!-- Komponent wyświetlający stan konta -->
                     <BalanceDisplay :balance="balance" />
-                    <!-- Komponent kontrolujący kwotę zakładu -->
                     <BetAmountControls
                         :betAmount="betAmount"
                         @update:betAmount="betAmount = $event"
@@ -26,7 +21,6 @@
                     />
                 </div>
 
-                <!-- Komponent z przyciskami obstawiania -->
                 <BetPlacementButtons
                     :redPlayerTable="redPlayerTable"
                     :greenPlayerTable="greenPlayerTable"
@@ -102,7 +96,7 @@ export default {
                 const position = order.indexOf(parseInt(this.outcome));
 
                 if (position === -1) {
-                    alert("Nieprawidłowy wynik!");
+                    alert("Wrong result!");
                     return;
                 }
 
@@ -142,8 +136,8 @@ export default {
                     this.updateBalance();
                 }, 6000);
             } catch (error) {
-                console.error("Błąd podczas pobierania wyniku:", error);
-                alert("Wystąpił błąd podczas kręcenia kołem.");
+                console.error("Error retrieving result:", error);
+                alert("An error occurred while turning the wheel.");
             }
         },
         async placeBet(color) {
@@ -154,11 +148,11 @@ export default {
                 });
                 this.addToPlayerTable(color);
                 this.activeBets.push(response.data.bet_id);
-                alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
+                alert("Bet accepted! New balance: " + response.data.new_balance);
                 this.updateTotalBet(color, this.betAmount);
                 this.balance = response.data.new_balance;
             } catch (error) {
-                alert("Błąd: " + error.response.data.error);
+                alert("Error: " + error.response.data.error);
             }
         },
         addToPlayerTable(color) {
@@ -193,7 +187,6 @@ export default {
             }
         },
         handleMaxBet() {
-            // Przykładowa logika ustawiania maksymalnego zakładu
             this.betAmount = this.balance;
         }
     }
