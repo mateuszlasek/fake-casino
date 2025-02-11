@@ -79,7 +79,7 @@ export default {
             totalBetRed: 0,
             totalBetGreen: 0,
             totalBetBlack: 0,
-            activeBets: [],
+            activeBets: [] ?? null,
             betAmount: 0,
             balance: this.$props.balance,
             redPlayerTable: {},

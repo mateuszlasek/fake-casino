@@ -57,7 +57,7 @@ class RouletteController extends Controller
     public function spinWheel(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'activeBets' => 'required|array',
+            'activeBets' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -69,19 +69,21 @@ class RouletteController extends Controller
         $winningNumber = rand(0, 14);
         $winningColor = $this->getColorByNumber($winningNumber);
 
-        $bets = Bet::whereIn('id', $activeBets)->get();
+        if(!empty($activeBets)) {
+            $bets = Bet::whereIn('id', $activeBets)->get();
 
-        foreach ($bets as $bet) {
-            $user = $bet->user;
+            foreach ($bets as $bet) {
+                $user = $bet->user;
 
-            if ($bet->color === $winningColor) {
-                if ($bet->color === 'green') {
-                    $user->balance += $bet->amount * 14;
-                } else {
-                    $user->balance += $bet->amount * 2;
+                if ($bet->color === $winningColor) {
+                    if ($bet->color === 'green') {
+                        $user->balance += $bet->amount * 14;
+                    } else {
+                        $user->balance += $bet->amount * 2;
+                    }
+
+                    $user->save();
                 }
-
-                $user->save();
             }
         }
 
