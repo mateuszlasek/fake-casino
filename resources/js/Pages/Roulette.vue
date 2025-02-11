@@ -39,7 +39,6 @@ export default {
             redPlayerTable: {},
             greenPlayerTable: {},
             blackPlayerTable: {},
-
         };
     },
     methods: {
@@ -177,6 +176,7 @@ export default {
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
+            <!-- Roulette wheel (left unchanged) -->
             <div class="w-full max-w-5xl px-4">
                 <div class="roulette-wrapper">
                     <div class="selector"></div>
@@ -199,73 +199,91 @@ export default {
                 </div>
             </div>
 
-            <div class="controls">
-                <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">Spin</button>
+            <!-- Spin button -->
+            <div class="controls w-full max-w-5xl mt-6">
+                <button @click="spin" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
+                    Spin
+                </button>
             </div>
 
-            <div class="flex flex-col space-y-4 w-full max-w-7xl px-4 text-white mt-8">
-                <div class="flex justify-between items-center space-x-4 w-full">
-                    <div class="w-1/3 mt-4 p-4 text-left rounded">
+            <!-- Betting controls -->
+            <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
+                <!-- Balance and bet amount input/buttons -->
+                <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="w-full md:w-1/3 mt-4 p-4 text-left rounded bg-casino-2">
                         Balance: <span class="font-bold">{{ balance }}</span>
                     </div>
-
-                    <div class="w-2/3 bg-casino-2 mt-4 p-4 space-x-2 rounded flex">
+                    <div class="w-full md:w-2/3 bg-casino-2 mt-4 p-4 rounded flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2">
                         <input
                             v-model="betAmount"
                             type="number"
                             min="1"
-                            class="w-1/4 bg-casino-2 text-white rounded"
+                            class="w-full md:w-1/4 bg-casino-2 text-white rounded p-2"
                             placeholder="Enter bet amount"
                         />
-                        <div class="w-3/4 flex space-x-2 ">
-                            <button @click="clearBet" class="w-1/4  bg-gray-600 hover:bg-gray-700 rounded text-white">Clear</button>
-                            <button @click="increaseBet(10)" class="w-1/4  bg-gray-600 hover:bg-gray-700 rounded text-white">+10</button>
-                            <button @click="increaseBet(100)" class="w-1/4 bg-gray-600 hover:bg-gray-700 rounded text-white">+100</button>
-                            <button @click="doubleBet" class="w-1/4 bg-gray-600 hover:bg-gray-700 rounded text-white">x2</button>
-                            <button @click="doubleBet" class="w-1/4 bg-red-500 hover:bg-red-600 rounded text-white">MAX</button>
-
+                        <div class="w-full md:w-3/4 flex flex-wrap md:flex-nowrap gap-2">
+                            <button @click="clearBet" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
+                                Clear
+                            </button>
+                            <button @click="increaseBet(10)" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
+                                +10
+                            </button>
+                            <button @click="increaseBet(100)" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
+                                +100
+                            </button>
+                            <button @click="doubleBet" class="flex-1 bg-gray-600 hover:bg-gray-700 rounded text-white py-2">
+                                x2
+                            </button>
+                            <button @click="doubleBet" class="flex-1 bg-red-500 hover:bg-red-600 rounded text-white py-2">
+                                MAX
+                            </button>
                         </div>
                     </div>
                 </div>
 
-
-                <div class="flex justify-between space-x-4">
-                    <div class="w-full">
-                        <button @click="placeBet('red')" class="w-full h-12 bg-red-500 hover:bg-red-600 rounded text-white">Red</button>
+                <!-- Bet placement buttons for red, green, and black -->
+                <div class="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="w-full md:w-1/3">
+                        <button @click="placeBet('red')" class="w-full h-12 bg-red-500 hover:bg-red-600 rounded text-white">
+                            Red
+                        </button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetRed }}
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in redPlayerTable" :key="userId">
-
+                            v-for="(amount, userId) in redPlayerTable" :key="userId"
+                        >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
                         </div>
-
                     </div>
-                    <div class="w-full">
-                        <button @click="placeBet('green')" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">Green</button>
+                    <div class="w-full md:w-1/3">
+                        <button @click="placeBet('green')" class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white">
+                            Green
+                        </button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetGreen }}
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in greenPlayerTable" :key="userId">
-
+                            v-for="(amount, userId) in greenPlayerTable" :key="userId"
+                        >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
                         </div>
                     </div>
-                    <div class="w-full">
-                        <button @click="placeBet('black')" class="w-full h-12 bg-gray-900 hover:bg-gray-800 rounded text-white">Black</button>
+                    <div class="w-full md:w-1/3">
+                        <button @click="placeBet('black')" class="w-full h-12 bg-gray-900 hover:bg-gray-800 rounded text-white">
+                            Black
+                        </button>
                         <div class="w-full bg-casino-2 mt-4 p-2 text-right rounded">
                             Total Bet: {{ totalBetBlack }}
                         </div>
                         <div
                             class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
-                            v-for="(amount, userId) in blackPlayerTable" :key="userId">
-
+                            v-for="(amount, userId) in blackPlayerTable" :key="userId"
+                        >
                             <span>{{ user.name }}</span>
                             <span>{{ amount }}</span>
                         </div>
