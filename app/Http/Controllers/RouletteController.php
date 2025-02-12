@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bet;
-use App\Models\User;
+use App\Services\RouletteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -11,20 +10,26 @@ use Inertia\Inertia;
 
 class RouletteController extends Controller
 {
+    protected $rouletteService;
+
+    public function __construct(RouletteService $rouletteService)
+    {
+        $this->rouletteService = $rouletteService;
+    }
 
     public function showRoulettePage()
     {
         $user = auth()->user();
         return Inertia::render('Roulette', [
             'balance' => $user->balance,
-            'user' => Auth::user()
+            'user'    => $user,
         ]);
     }
 
     public function placeBet(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'color' => 'required|string|in:red,green,black',
+            'color'  => 'required|string|in:red,green,black',
             'amount' => 'required|numeric|min:1',
         ]);
 
@@ -34,22 +39,15 @@ class RouletteController extends Controller
 
         $user = auth()->user();
 
-        if ($user->balance < $request->amount) {
-            return response()->json(['error' => 'Not enough balance'], 400);
+        try {
+            $bet = $this->rouletteService->placeBet($user, $request->input('color'), (float)$request->input('amount'));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
         }
 
-        $bet = Bet::create([
-            'user_id' => $user->id,
-            'color' => $request->color,
-            'amount' => $request->amount,
-        ]);
-
-        $user->balance -= $request->amount;
-        $user->save();
-
         return response()->json([
-            'message' => 'Bet placed',
-            'bet_id' => $bet->id,
+            'message'     => 'Bet placed',
+            'bet_id'      => $bet->id,
             'new_balance' => $user->balance,
         ], 200);
     }
@@ -65,34 +63,8 @@ class RouletteController extends Controller
         }
 
         $activeBets = $request->input('activeBets', []);
-
-        $winningNumber = rand(0, 14);
-        $winningColor = $this->getColorByNumber($winningNumber);
-
-        if(!empty($activeBets)) {
-            $bets = Bet::whereIn('id', $activeBets)->get();
-
-            foreach ($bets as $bet) {
-                $user = $bet->user;
-
-                if ($bet->color === $winningColor) {
-                    if ($bet->color === 'green') {
-                        $user->balance += $bet->amount * 14;
-                    } else {
-                        $user->balance += $bet->amount * 2;
-                    }
-
-                    $user->save();
-                }
-            }
-        }
+        $winningNumber = $this->rouletteService->spinWheel($activeBets);
 
         return response()->json(['number' => $winningNumber]);
-    }
-
-    private function getColorByNumber($number)
-    {
-        if ($number === 0) return 'green';
-        return in_array($number, [1, 2, 3, 4, 5, 6, 7]) ? 'red' : 'black';
     }
 }
