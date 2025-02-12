@@ -7,8 +7,9 @@
 
             <div class="w-full max-w-5xl mt-6">
                 <button
+                    :disabled="spinning"
                     @click="spin"
-                    class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white text-lg font-semibold transition duration-300"
+                    class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white text-lg font-semibold transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Spin
                 </button>
@@ -32,7 +33,8 @@
                     :totalBetGreen="totalBetGreen"
                     :totalBetBlack="totalBetBlack"
                     :user="user"
-                    @place-bet="placeBet"
+                    :disabled="spinning"
+                @place-bet="placeBet"
                 />
             </div>
         </div>
@@ -79,16 +81,21 @@ export default {
             totalBetRed: 0,
             totalBetGreen: 0,
             totalBetBlack: 0,
-            activeBets: [] ?? null,
+            activeBets: [],
             betAmount: 0,
             balance: this.$props.balance,
             redPlayerTable: {},
             greenPlayerTable: {},
-            blackPlayerTable: {}
+            blackPlayerTable: {},
+            spinning: false
         };
     },
     methods: {
         async spin() {
+            if (this.spinning) return;
+
+            this.spinning = true;
+
             try {
                 const response = await axios.post("/spin-wheel", {
                     activeBets: this.activeBets
@@ -100,6 +107,7 @@ export default {
 
                 if (position === -1) {
                     alert("Wrong result!");
+                    this.spinning = false;
                     return;
                 }
 
@@ -137,13 +145,18 @@ export default {
                     this.blackPlayerTable = {};
 
                     this.updateBalance();
+
+                    this.spinning = false;
                 }, 6000);
             } catch (error) {
                 console.error("Error retrieving result:", error);
                 alert("An error occurred while turning the wheel.");
+                this.spinning = false;
             }
         },
         async placeBet(color) {
+            if (this.spinning) return;
+
             try {
                 const response = await axios.post("/place-bet", {
                     color: color,
