@@ -19,6 +19,8 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "lucide-vue-next": "^0.475.0"
+        "laravel-echo": "^2.0.0",
+        "lucide-vue-next": "^0.475.0",
+        "pusher-js": "^8.4.0"
     }
 }
