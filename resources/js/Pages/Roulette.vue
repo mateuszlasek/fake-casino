@@ -161,9 +161,9 @@ export default {
                 this.totalBetRed = 0;
                 this.totalBetBlack = 0;
                 this.totalBetGreen = 0;
-                this.redPlayerTable = {};
-                this.greenPlayerTable = {};
-                this.blackPlayerTable = {};
+                this.redPlayerTable = [];
+                this.greenPlayerTable = [];
+                this.blackPlayerTable = [];
 
                 this.updateBalance();
                 this.spinning = false;
