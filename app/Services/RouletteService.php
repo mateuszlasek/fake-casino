@@ -26,27 +26,23 @@ class RouletteService
         return $bet;
     }
 
-    public function spinWheel(array $activeBetIds): int
+    public function spinWheel(): int
     {
         $winningNumber = rand(0, 14);
         $winningColor = $this->getColorByNumber($winningNumber);
 
-        if (!empty($activeBetIds)) {
-            $bets = Bet::whereIn('id', $activeBetIds)->get();
+        $activeBets = Bet::where('active', true)->get();
 
-            foreach ($bets as $bet) {
-                $user = $bet->user;
+        foreach ($activeBets as $bet) {
+            $user = $bet->user;
 
-                if ($bet->color === $winningColor) {
-                    if ($bet->color === 'green') {
-                        $user->balance += $bet->amount * 14;
-                    } else {
-                        $user->balance += $bet->amount * 2;
-                    }
-
-                    $user->save();
-                }
+            if ($bet->color === $winningColor) {
+                $multiplier = ($bet->color === 'green') ? 14 : 2;
+                $user->balance += $bet->amount * $multiplier;
+                $user->save();
             }
+
+            $bet->update(['active' => false]);
         }
 
         return $winningNumber;
@@ -59,5 +55,22 @@ class RouletteService
         }
 
         return in_array($number, [1, 2, 3, 4, 5, 6, 7]) ? 'red' : 'black';
+    }
+
+    public function getActiveBets(): array
+    {
+        return Bet::where('active', true)
+        ->with('user')
+            ->get()
+            ->groupBy('color')
+            ->map(function ($bets, $color) {
+                return $bets->map(function ($bet) {
+                    return [
+                        'username' => $bet->user->name,
+                        'amount'   => $bet->amount,
+                    ];
+                });
+            })
+            ->toArray();
     }
 }

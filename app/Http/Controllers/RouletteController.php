@@ -22,9 +22,12 @@ class RouletteController extends Controller
     public function showRoulettePage()
     {
         $user = auth()->user();
+        $activeBets = $this->rouletteService->getActiveBets();
+
         return Inertia::render('Roulette', [
             'balance' => $user->balance,
             'user'    => $user,
+            'initialBets' => $activeBets
         ]);
     }
 

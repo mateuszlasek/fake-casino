@@ -13,6 +13,7 @@ class Bet extends Model
         'user_id',
         'color',
         'amount',
+        'active'
     ];
 
     public function user()

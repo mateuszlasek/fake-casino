@@ -63,7 +63,8 @@ export default {
     },
     props: {
         balance: Number,
-        user: Object
+        user: Object,
+        initialBets: Object
     },
     data() {
         return {
@@ -93,9 +94,9 @@ export default {
             activeBets: [],
             betAmount: 0,
             balance: this.$props.balance,
-            redPlayerTable: {},
-            greenPlayerTable: {},
-            blackPlayerTable: {},
+            redPlayerTable: this.initialBets.red || [],
+            greenPlayerTable: this.initialBets.green || [],
+            blackPlayerTable: this.initialBets.black || [],
             spinning: false
         };
     },
@@ -116,9 +117,7 @@ export default {
             this.spinning = true;
 
             try {
-                const response = await axios.post("/spin-wheel", {
-                    activeBets: this.activeBets
-                });
+                const response = await axios.post("/spin-wheel");
                 this.outcome = response.data.number;
             } catch (error) {
                 alert("Wystąpił błąd podczas obracania ruletki.");
@@ -192,13 +191,19 @@ export default {
 
         updateBetTable(betData) {
             console.log("Aktualizuję tabelę zakładów:", betData);
+            const newBet = {
+                username: betData.username,
+                amount: betData.amount
+            };
+
             if (betData.color === "red") {
-                this.redPlayerTable[betData.username] = (this.redPlayerTable[betData.username] || 0) + betData.amount;
+                this.redPlayerTable.push(newBet);
             } else if (betData.color === "green") {
-                this.greenPlayerTable[betData.username] = (this.greenPlayerTable[betData.username] || 0) + betData.amount;
+                this.greenPlayerTable.push(newBet);
             } else if (betData.color === "black") {
-                this.blackPlayerTable[betData.username] = (this.blackPlayerTable[betData.username] || 0) + betData.amount;
+                this.blackPlayerTable.push(newBet);
             }
+
             this.updateTotalBet(betData.color, betData.amount);
         },
 
