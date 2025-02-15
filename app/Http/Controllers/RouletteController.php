@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RouletteSpinEvent;
 use App\Services\RouletteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +65,8 @@ class RouletteController extends Controller
 
         $activeBets = $request->input('activeBets', []);
         $winningNumber = $this->rouletteService->spinWheel($activeBets);
+
+        event(new RouletteSpinEvent($winningNumber));
 
         return response()->json(['number' => $winningNumber]);
     }

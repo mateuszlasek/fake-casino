@@ -3,18 +3,21 @@
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
+            <!-- Komponent wizualizujący ruletkę -->
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
 
+            <!-- Przycisk do inicjowania obrotu -->
             <div class="w-full max-w-5xl mt-6">
                 <button
                     :disabled="spinning"
-                    @click="spin"
+                    @click="initiateSpin"
                     class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white text-lg font-semibold transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Spin
                 </button>
             </div>
 
+            <!-- Sekcja zakładów i salda -->
             <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
                     <BalanceDisplay :balance="balance" />
@@ -34,7 +37,7 @@
                     :totalBetBlack="totalBetBlack"
                     :user="user"
                     :disabled="spinning"
-                @place-bet="placeBet"
+                    @place-bet="placeBet"
                 />
             </div>
         </div>
@@ -51,7 +54,13 @@ import BetPlacementButtons from "@/Components/Roulette/BetPlacementButtons.vue";
 
 export default {
     name: "Roulette",
-    components: { BetPlacementButtons, BetAmountControls, BalanceDisplay, RouletteWheel, Layout },
+    components: {
+        Layout,
+        RouletteWheel,
+        BalanceDisplay,
+        BetAmountControls,
+        BetPlacementButtons
+    },
     props: {
         balance: Number,
         user: Object
@@ -90,10 +99,16 @@ export default {
             spinning: false
         };
     },
-    methods: {
-        async spin() {
-            if (this.spinning) return;
+    mounted() {
+        window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
+            this.handleRemoteSpin(data.winningNumber);
 
+        });
+    },
+
+    methods: {
+        async initiateSpin() {
+            if (this.spinning) return;
             this.spinning = true;
 
             try {
@@ -101,59 +116,63 @@ export default {
                     activeBets: this.activeBets
                 });
                 this.outcome = response.data.number;
-
-                const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
-                const position = order.indexOf(parseInt(this.outcome));
-
-                if (position === -1) {
-                    alert("Wrong result!");
-                    this.spinning = false;
-                    return;
-                }
-
-                const rows = 12;
-                const card = 75 + 3 * 2;
-                const landingPosition = rows * 15 * card + position * card;
-                const randomize = Math.floor(Math.random() * 75) - 75 / 2;
-
-                const object = {
-                    x: Math.floor(Math.random() * 50) / 100,
-                    y: Math.floor(Math.random() * 20) / 100
-                };
-
-                this.wheelStyles = {
-                    transitionTimingFunction: `cubic-bezier(0,${object.x},${object.y},1)`,
-                    transitionDuration: "6s",
-                    transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
-                };
-
-                setTimeout(() => {
-                    const resetTo = -(position * card + randomize);
-                    this.wheelStyles = {
-                        transitionTimingFunction: "",
-                        transitionDuration: "",
-                        transform: `translate3d(${resetTo}px, 0px, 0px)`
-                    };
-
-                    this.activeBets = [];
-                    this.totalBetRed = 0;
-                    this.totalBetBlack = 0;
-                    this.totalBetGreen = 0;
-
-                    this.redPlayerTable = {};
-                    this.greenPlayerTable = {};
-                    this.blackPlayerTable = {};
-
-                    this.updateBalance();
-
-                    this.spinning = false;
-                }, 6000);
             } catch (error) {
-                console.error("Error retrieving result:", error);
-                alert("An error occurred while turning the wheel.");
+                console.error("❌ Błąd podczas losowania:", error);
+                alert("Wystąpił błąd podczas obracania ruletki.");
                 this.spinning = false;
             }
         },
+
+        handleRemoteSpin(winningNumber) {
+            console.log("🎰 Rozpoczynam animację dla numeru:", winningNumber);
+
+            const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
+            const position = order.indexOf(parseInt(winningNumber));
+
+            if (position === -1) {
+                alert("❌ Nieprawidłowy wynik!");
+                this.spinning = false;
+                return;
+            }
+
+            const rows = 12;
+            const card = 75 + 3 * 2;
+            const landingPosition = rows * 15 * card + position * card;
+            const randomize = Math.floor(Math.random() * 75) - 75 / 2;
+
+            const bezierValues = {
+                x: Math.floor(Math.random() * 50) / 100,
+                y: Math.floor(Math.random() * 20) / 100
+            };
+
+            this.wheelStyles = {
+                transitionTimingFunction: `cubic-bezier(0,${bezierValues.x},${bezierValues.y},1)`,
+                transitionDuration: "6s",
+                transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
+            };
+
+            setTimeout(() => {
+                const resetTo = -(position * card + randomize);
+                this.wheelStyles = {
+                    transitionTimingFunction: "",
+                    transitionDuration: "",
+                    transform: `translate3d(${resetTo}px, 0px, 0px)`
+                };
+
+                this.activeBets = [];
+                this.totalBetRed = 0;
+                this.totalBetBlack = 0;
+                this.totalBetGreen = 0;
+                this.redPlayerTable = {};
+                this.greenPlayerTable = {};
+                this.blackPlayerTable = {};
+
+                this.updateBalance();
+
+                this.spinning = false;
+            }, 6000);
+        },
+
         async placeBet(color) {
             if (this.spinning) return;
 
@@ -164,44 +183,19 @@ export default {
                 });
                 this.addToPlayerTable(color);
                 this.activeBets.push(response.data.bet_id);
-                alert("Bet accepted! New balance: " + response.data.new_balance);
+                alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
                 this.updateTotalBet(color, this.betAmount);
                 this.balance = response.data.new_balance;
             } catch (error) {
-                alert("Error: " + error.response.data.error);
+                alert("Błąd: " + error.response.data.error);
             }
         },
-        addToPlayerTable(color) {
-            if (color === "red") {
-                this.redPlayerTable[this.user.id] =
-                    (this.redPlayerTable[this.user.id] || 0) + this.betAmount;
-            } else if (color === "green") {
-                this.greenPlayerTable[this.user.id] =
-                    (this.greenPlayerTable[this.user.id] || 0) + this.betAmount;
-            } else if (color === "black") {
-                this.blackPlayerTable[this.user.id] =
-                    (this.blackPlayerTable[this.user.id] || 0) + this.betAmount;
-            }
-        },
+
         async updateBalance() {
-            try {
-                const response = await axios.get("/get-balance", {
-                    params: { user_id: this.user.id }
-                });
-                this.balance = response.data.balance;
-            } catch (error) {
-                alert("Error: " + error.response.data.error);
-            }
+            const response = await axios.get("/get-balance", {params: {user_id: this.user.id}});
+            this.balance = response.data.balance;
         },
-        updateTotalBet(color, totalBet) {
-            if (color === "red") {
-                this.totalBetRed += totalBet;
-            } else if (color === "green") {
-                this.totalBetGreen += totalBet;
-            } else if (color === "black") {
-                this.totalBetBlack += totalBet;
-            }
-        },
+
         handleMaxBet() {
             this.betAmount = this.balance;
         }
