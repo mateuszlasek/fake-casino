@@ -101,8 +101,11 @@ export default {
     },
     mounted() {
         window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
-            this.handleRemoteSpin(data.winningNumber);
+            this.handleRemoteSpin(data.winningNumber, data.randomize);
+        });
 
+        window.Echo.channel("roulette").listen("BetPlacedEvent", (data) => {
+            this.updateBetTable(data);
         });
     },
 
@@ -117,20 +120,20 @@ export default {
                 });
                 this.outcome = response.data.number;
             } catch (error) {
-                console.error("❌ Błąd podczas losowania:", error);
                 alert("Wystąpił błąd podczas obracania ruletki.");
                 this.spinning = false;
             }
         },
 
-        handleRemoteSpin(winningNumber) {
-            console.log("🎰 Rozpoczynam animację dla numeru:", winningNumber);
+        handleRemoteSpin(winningNumber, randomize) {
+            if (typeof randomize !== "number" || isNaN(randomize)) {
+                randomize = 0;
+            }
 
             const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
             const position = order.indexOf(parseInt(winningNumber));
 
             if (position === -1) {
-                alert("❌ Nieprawidłowy wynik!");
                 this.spinning = false;
                 return;
             }
@@ -138,12 +141,7 @@ export default {
             const rows = 12;
             const card = 75 + 3 * 2;
             const landingPosition = rows * 15 * card + position * card;
-            const randomize = Math.floor(Math.random() * 75) - 75 / 2;
-
-            const bezierValues = {
-                x: Math.floor(Math.random() * 50) / 100,
-                y: Math.floor(Math.random() * 20) / 100
-            };
+            const bezierValues = { x: 0.5, y: 0.5 };
 
             this.wheelStyles = {
                 transitionTimingFunction: `cubic-bezier(0,${bezierValues.x},${bezierValues.y},1)`,
@@ -168,10 +166,10 @@ export default {
                 this.blackPlayerTable = {};
 
                 this.updateBalance();
-
                 this.spinning = false;
             }, 6000);
-        },
+        }
+        ,
 
         async placeBet(color) {
             if (this.spinning) return;
@@ -181,7 +179,7 @@ export default {
                     color: color,
                     amount: this.betAmount
                 });
-                this.addToPlayerTable(color);
+                this.addToPlayerTable(color, this.user.id, this.betAmount);
                 this.activeBets.push(response.data.bet_id);
                 alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
                 this.updateTotalBet(color, this.betAmount);
@@ -191,9 +189,45 @@ export default {
             }
         },
 
+        addToPlayerTable(color, userId, amount) {
+            if (color === "red") {
+                this.redPlayerTable[userId] = (this.redPlayerTable[userId] || 0) + amount;
+            } else if (color === "green") {
+                this.greenPlayerTable[userId] = (this.greenPlayerTable[userId] || 0) + amount;
+            } else if (color === "black") {
+                this.blackPlayerTable[userId] = (this.blackPlayerTable[userId] || 0) + amount;
+            }
+        },
+
+        updateBetTable(betData) {
+            console.log("Aktualizuję tabelę zakładów:", betData);
+            if (betData.color === "red") {
+                this.redPlayerTable[betData.user_id] = (this.redPlayerTable[betData.user_id] || 0) + betData.amount;
+            } else if (betData.color === "green") {
+                this.greenPlayerTable[betData.user_id] = (this.greenPlayerTable[betData.user_id] || 0) + betData.amount;
+            } else if (betData.color === "black") {
+                this.blackPlayerTable[betData.user_id] = (this.blackPlayerTable[betData.user_id] || 0) + betData.amount;
+            }
+            this.updateTotalBet(betData.color, betData.amount);
+        },
+
+        updateTotalBet(color, betAmount) {
+            if (color === "red") {
+                this.totalBetRed += betAmount;
+            } else if (color === "green") {
+                this.totalBetGreen += betAmount;
+            } else if (color === "black") {
+                this.totalBetBlack += betAmount;
+            }
+        },
+
         async updateBalance() {
-            const response = await axios.get("/get-balance", {params: {user_id: this.user.id}});
-            this.balance = response.data.balance;
+            try {
+                const response = await axios.get("/get-balance", {params: {user_id: this.user.id}});
+                this.balance = response.data.balance;
+            } catch (error) {
+                alert("Błąd: " + error.response.data.error);
+            }
         },
 
         handleMaxBet() {

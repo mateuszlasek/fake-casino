@@ -66,7 +66,7 @@ class RouletteController extends Controller
         $activeBets = $request->input('activeBets', []);
         $winningNumber = $this->rouletteService->spinWheel($activeBets);
 
-        event(new RouletteSpinEvent($winningNumber));
+        event(new RouletteSpinEvent($winningNumber, rand(-37, 37)));
 
         return response()->json(['number' => $winningNumber]);
     }

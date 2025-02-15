@@ -12,15 +12,17 @@ class RouletteSpinEvent implements ShouldBroadcast
     use Dispatchable, SerializesModels;
 
     public $winningNumber;
+    public $randomize;
 
     /**
      * Create a new event instance.
      *
      * @param int $winningNumber
      */
-    public function __construct(int $winningNumber)
+    public function __construct(int $winningNumber, int $randomize)
     {
         $this->winningNumber = $winningNumber;
+        $this->randomize = $randomize;
     }
 
     /**
