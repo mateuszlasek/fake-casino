@@ -8,11 +8,11 @@
                 Total Bet: {{ totalBetRed }}
             </div>
             <div
-                v-for="(amount, userId) in redPlayerTable"
-                :key="userId"
+                v-for="(amount, username) in redPlayerTable"
+                :key="username"
                 class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
             >
-                <span>{{ user.name }}</span>
+                <span>{{ username }}</span>
                 <span>{{ amount }}</span>
             </div>
         </div>
@@ -24,11 +24,11 @@
                 Total Bet: {{ totalBetGreen }}
             </div>
             <div
-                v-for="(amount, userId) in greenPlayerTable"
-                :key="userId"
+                v-for="(amount, username) in greenPlayerTable"
+                :key="username"
                 class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
             >
-                <span>{{ user.name }}</span>
+                <span>{{ username }}</span>
                 <span>{{ amount }}</span>
             </div>
         </div>
@@ -40,11 +40,11 @@
                 Total Bet: {{ totalBetBlack }}
             </div>
             <div
-                v-for="(amount, userId) in blackPlayerTable"
-                :key="userId"
+                v-for="(amount, username) in blackPlayerTable"
+                :key="username"
                 class="w-full bg-casino-2 mt-4 p-2 flex rounded justify-between"
             >
-                <span>{{ user.name }}</span>
+                <span>{{ username }}</span>
                 <span>{{ amount }}</span>
             </div>
         </div>

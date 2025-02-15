@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BetPlacedEvent;
 use App\Events\RouletteSpinEvent;
 use App\Services\RouletteService;
 use Illuminate\Http\Request;
@@ -45,6 +46,8 @@ class RouletteController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
+
+        event(new BetPlacedEvent($user->name, $bet->color, $bet->amount));
 
         return response()->json([
             'message'     => 'Bet placed',

@@ -104,9 +104,10 @@ export default {
             this.handleRemoteSpin(data.winningNumber, data.randomize);
         });
 
-        window.Echo.channel("roulette").listen("BetPlacedEvent", (data) => {
-            this.updateBetTable(data);
-        });
+        window.Echo.channel("bet-placed")
+            .listen("BetPlacedEvent", (data) => {
+                this.updateBetTable(data);
+            });
     },
 
     methods: {
@@ -179,34 +180,24 @@ export default {
                     color: color,
                     amount: this.betAmount
                 });
-                this.addToPlayerTable(color, this.user.id, this.betAmount);
                 this.activeBets.push(response.data.bet_id);
                 alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
-                this.updateTotalBet(color, this.betAmount);
                 this.balance = response.data.new_balance;
             } catch (error) {
-                alert("Błąd: " + error.response.data.error);
-            }
-        },
+                console.error("Błąd przy składaniu zakładu:", error);
 
-        addToPlayerTable(color, userId, amount) {
-            if (color === "red") {
-                this.redPlayerTable[userId] = (this.redPlayerTable[userId] || 0) + amount;
-            } else if (color === "green") {
-                this.greenPlayerTable[userId] = (this.greenPlayerTable[userId] || 0) + amount;
-            } else if (color === "black") {
-                this.blackPlayerTable[userId] = (this.blackPlayerTable[userId] || 0) + amount;
+                alert("Błąd: " + error.response.data.error);
             }
         },
 
         updateBetTable(betData) {
             console.log("Aktualizuję tabelę zakładów:", betData);
             if (betData.color === "red") {
-                this.redPlayerTable[betData.user_id] = (this.redPlayerTable[betData.user_id] || 0) + betData.amount;
+                this.redPlayerTable[betData.username] = (this.redPlayerTable[betData.username] || 0) + betData.amount;
             } else if (betData.color === "green") {
-                this.greenPlayerTable[betData.user_id] = (this.greenPlayerTable[betData.user_id] || 0) + betData.amount;
+                this.greenPlayerTable[betData.username] = (this.greenPlayerTable[betData.username] || 0) + betData.amount;
             } else if (betData.color === "black") {
-                this.blackPlayerTable[betData.user_id] = (this.blackPlayerTable[betData.user_id] || 0) + betData.amount;
+                this.blackPlayerTable[betData.username] = (this.blackPlayerTable[betData.username] || 0) + betData.amount;
             }
             this.updateTotalBet(betData.color, betData.amount);
         },
