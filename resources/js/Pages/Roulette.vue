@@ -101,6 +101,9 @@ export default {
         };
     },
     mounted() {
+        this.fetchCurrentSpin();
+
+
         window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
             this.handleRemoteSpin(data.winningNumber, data.randomize);
         });
@@ -125,7 +128,7 @@ export default {
             }
         },
 
-        handleRemoteSpin(winningNumber, randomize) {
+        handleRemoteSpin(winningNumber, randomize, duration = 6000) {
             if (typeof randomize !== "number" || isNaN(randomize)) {
                 randomize = 0;
             }
@@ -145,7 +148,7 @@ export default {
 
             this.wheelStyles = {
                 transitionTimingFunction: `cubic-bezier(0,${bezierValues.x},${bezierValues.y},1)`,
-                transitionDuration: "6s",
+                transitionDuration: `${duration}ms`,
                 transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
             };
 
@@ -167,7 +170,9 @@ export default {
 
                 this.updateBalance();
                 this.spinning = false;
-            }, 6000);
+
+                axios.post("/clear-spin");
+            }, duration);
         }
         ,
 
@@ -228,7 +233,21 @@ export default {
 
         handleMaxBet() {
             this.betAmount = this.balance;
-        }
+        },
+
+        async fetchCurrentSpin() {
+            try {
+                const response = await axios.get("/get-current-spin");
+                if (response.data.spinning) {
+                    const elapsedTime = Date.now() - new Date(response.data.startTime).getTime();
+                    const remainingTime = Math.max(0, 6000 - elapsedTime);
+
+                    this.handleRemoteSpin(response.data.winningNumber, response.data.randomize);
+                }
+            } catch (error) {
+                console.error("Błąd podczas pobierania stanu ruletki:", error);
+            }
+        },
     }
 };
 </script>

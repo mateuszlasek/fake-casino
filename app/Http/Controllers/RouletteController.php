@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\BetPlacedEvent;
 use App\Events\RouletteSpinEvent;
+use App\Models\RouletteState;
 use App\Services\RouletteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,11 +70,40 @@ class RouletteController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $activeBets = $request->input('activeBets', []);
-        $winningNumber = $this->rouletteService->spinWheel($activeBets);
+        $winningNumber = $this->rouletteService->spinWheel();
 
-        event(new RouletteSpinEvent($winningNumber, rand(-37, 37)));
+        $startTime = now();
+        $randomize = rand(-37, 37);
+
+        RouletteState::updateOrCreate(
+            ['id' => 1],
+            [
+                'spinning' => true,
+                'winning_number' => $winningNumber,
+                'randomize' => $randomize,
+                'start_time' => $startTime,
+            ]
+        );
+
+        event(new RouletteSpinEvent($winningNumber, $randomize, $startTime));
 
         return response()->json(['number' => $winningNumber]);
+    }
+
+    public function getCurrentSpin()
+    {
+        $state = RouletteState::first();
+
+        return response()->json([
+            'spinning' => $state ? $state->spinning : false,
+            'winningNumber' => $state ? $state->winning_number : null,
+            'randomize' => $state ? $state->randomize : null,
+            'startTime' => $state ? $state->start_time : null,
+        ]);
+    }
+
+    public function clearSpin()
+    {
+        RouletteState::where('id', 1)->update(['spinning' => false]);
     }
 }
