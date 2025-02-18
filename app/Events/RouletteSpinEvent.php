@@ -14,17 +14,20 @@ class RouletteSpinEvent implements ShouldBroadcast
     public int $winningNumber;
     public int $randomize;
     public $startTime;
+    public $history;
+
 
     /**
      * Create a new event instance.
      *
      * @param int $winningNumber
      */
-    public function __construct(int $winningNumber, int $randomize, $startTime)
+    public function __construct(int $winningNumber, int $randomize, $startTime, $history)
     {
         $this->winningNumber = $winningNumber;
         $this->randomize = $randomize;
         $this->startTime = $startTime;
+        $this->history = $history;
     }
 
     /**

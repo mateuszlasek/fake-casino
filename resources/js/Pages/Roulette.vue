@@ -3,10 +3,10 @@
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
-            <!-- Komponent wizualizujący ruletkę -->
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
+            <RouletteHistory :historyColors="historyColors" />
 
-            <!-- Przycisk do inicjowania obrotu -->
+
             <div class="w-full max-w-5xl mt-6">
                 <button
                     :disabled="spinning"
@@ -17,7 +17,6 @@
                 </button>
             </div>
 
-            <!-- Sekcja zakładów i salda -->
             <div class="flex flex-col space-y-8 w-full max-w-7xl px-4 text-white mt-8">
                 <div class="flex flex-col md:flex-row justify-between items-center w-full space-y-4 md:space-y-0 md:space-x-4">
                     <BalanceDisplay :balance="balance" />
@@ -51,10 +50,12 @@ import RouletteWheel from "@/Components/Roulette/RouletteWheel.vue";
 import BalanceDisplay from "@/Components/Roulette/BalanceDisplay.vue";
 import BetAmountControls from "@/Components/Roulette/BetAmountControls.vue";
 import BetPlacementButtons from "@/Components/Roulette/BetPlacementButtons.vue";
+import RouletteHistory from "@/Components/Roulette/RouletteHistory.vue";
 
 export default {
     name: "Roulette",
     components: {
+        RouletteHistory,
         Layout,
         RouletteWheel,
         BalanceDisplay,
@@ -97,11 +98,13 @@ export default {
             redPlayerTable: this.initialBets.red || [],
             greenPlayerTable: this.initialBets.green || [],
             blackPlayerTable: this.initialBets.black || [],
-            spinning: false
+            spinning: false,
+            historyColors: []
         };
     },
     mounted() {
         this.fetchCurrentSpin();
+        this.fetchHistory();
 
 
         window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
@@ -115,6 +118,14 @@ export default {
     },
 
     methods: {
+        async fetchHistory() {
+            try {
+                const response = await axios.get("/get-history");
+                this.historyColors = response.data;
+            } catch (error) {
+                console.error("Błąd podczas pobierania historii:", error);
+            }
+        },
         async initiateSpin() {
             if (this.spinning) return;
             this.spinning = true;
@@ -170,7 +181,7 @@ export default {
 
                 this.updateBalance();
                 this.spinning = false;
-
+                this.fetchHistory();
                 axios.post("/clear-spin");
             }, duration);
         }

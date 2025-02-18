@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Bet;
+use App\Models\RouletteHistory;
 use App\Models\User;
 use Exception;
 
@@ -32,6 +33,12 @@ class RouletteService
         $winningColor = $this->getColorByNumber($winningNumber);
 
         $activeBets = Bet::where('active', true)->get();
+
+        RouletteHistory::create(['color' => $winningColor]);
+        $historyCount = RouletteHistory::count();
+        if ($historyCount > 10) {
+            RouletteHistory::oldest()->limit($historyCount - 10)->delete();
+        }
 
         foreach ($activeBets as $bet) {
             $user = $bet->user;

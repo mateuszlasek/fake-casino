@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\BetPlacedEvent;
 use App\Events\RouletteSpinEvent;
+use App\Models\RouletteHistory;
 use App\Models\RouletteState;
 use App\Services\RouletteService;
 use Illuminate\Http\Request;
@@ -85,7 +86,7 @@ class RouletteController extends Controller
             ]
         );
 
-        event(new RouletteSpinEvent($winningNumber, $randomize, $startTime));
+        event(new RouletteSpinEvent($winningNumber, $randomize, $startTime, $this->getHistory()));
 
         return response()->json(['number' => $winningNumber]);
     }
@@ -105,5 +106,11 @@ class RouletteController extends Controller
     public function clearSpin()
     {
         RouletteState::where('id', 1)->update(['spinning' => false]);
+    }
+
+    public function getHistory()
+    {
+        $history = RouletteHistory::latest()->take(10)->pluck('color');
+        return response()->json($history);
     }
 }
