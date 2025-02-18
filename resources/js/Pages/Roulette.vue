@@ -9,6 +9,12 @@
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
             <RouletteHistory :historyColors="historyColors" />
 
+            <div v-if="timerActive" class="w-full bg-gray-200 rounded-full h-2 my-4">
+                <div
+                    class="bg-green-500 h-full rounded-full transition-all duration-500"
+                    :style="{ width: timerWidth + '%' }"
+                ></div>
+            </div>
 
             <div class="w-full max-w-5xl mt-6">
                 <button
@@ -76,21 +82,21 @@ export default {
             outcome: null,
             rows: Array(29).fill(null),
             cards: [
-                { number: 1, color: "red" },
-                { number: 14, color: "black" },
-                { number: 2, color: "red" },
-                { number: 13, color: "black" },
-                { number: 3, color: "red" },
-                { number: 12, color: "black" },
-                { number: 4, color: "red" },
-                { number: 0, color: "green" },
-                { number: 11, color: "black" },
-                { number: 5, color: "red" },
-                { number: 10, color: "black" },
-                { number: 6, color: "red" },
-                { number: 9, color: "black" },
-                { number: 7, color: "red" },
-                { number: 8, color: "black" }
+                {number: 1, color: "red"},
+                {number: 14, color: "black"},
+                {number: 2, color: "red"},
+                {number: 13, color: "black"},
+                {number: 3, color: "red"},
+                {number: 12, color: "black"},
+                {number: 4, color: "red"},
+                {number: 0, color: "green"},
+                {number: 11, color: "black"},
+                {number: 5, color: "red"},
+                {number: 10, color: "black"},
+                {number: 6, color: "red"},
+                {number: 9, color: "black"},
+                {number: 7, color: "red"},
+                {number: 8, color: "black"}
             ],
             wheelStyles: {},
             totalBetRed: 0,
@@ -103,7 +109,10 @@ export default {
             greenPlayerTable: this.initialBets.green || [],
             blackPlayerTable: this.initialBets.black || [],
             spinning: false,
-            historyColors: []
+            historyColors: [],
+            timerActive: false, // Flaga aktywności timera
+            timerWidth: 100, // Początkowa szerokość paska
+            timeLeft: 10 // Czas pozostały do rozpoczęcia ruletki (10 sekund)
         };
     },
     mounted() {
@@ -160,7 +169,7 @@ export default {
             const rows = 12;
             const card = 75 + 3 * 2;
             const landingPosition = rows * 15 * card + position * card;
-            const bezierValues = { x: 0.5, y: 0.5 };
+            const bezierValues = {x: 0.5, y: 0.5};
 
             this.wheelStyles = {
                 transitionTimingFunction: `cubic-bezier(0,${bezierValues.x},${bezierValues.y},1)`,
@@ -189,8 +198,7 @@ export default {
                 this.fetchHistory();
                 axios.post("/clear-spin");
             }, duration);
-        }
-        ,
+        },
 
         async placeBet(color) {
             if (this.spinning) return;
@@ -203,9 +211,13 @@ export default {
                 this.activeBets.push(response.data.bet_id);
                 alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
                 this.balance = response.data.new_balance;
+
+                // Uruchomienie timera jeśli są aktywne zakłady
+                if (this.activeBets.length > 0 && !this.timerActive) {
+                    this.startTimer();
+                }
             } catch (error) {
                 console.error("Błąd przy składaniu zakładu:", error);
-
                 alert("Błąd: " + error.response.data.error);
             }
         },
@@ -264,6 +276,23 @@ export default {
                 console.error("Błąd podczas pobierania stanu ruletki:", error);
             }
         },
+
+        // Timer
+        startTimer() {
+            this.timerActive = true;
+            const interval = setInterval(() => {
+                if (this.timeLeft > 0) {
+                    this.timeLeft -= 1;
+                    this.timerWidth = (this.timeLeft / 10) * 100; // Obliczanie szerokości paska
+                } else {
+                    clearInterval(interval);
+                    this.timerActive = false;
+                    this.timerWidth = 100; // Resetujemy pasek
+                    this.timeLeft = 10; // Resetujemy czas
+                    this.initiateSpin(); // Rozpoczynamy spin
+                }
+            }, 1000); // Co sekundy
+        }
     }
 };
 </script>
