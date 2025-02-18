@@ -1,5 +1,8 @@
 <template>
     <Layout>
+        <div v-if="loading" class="fixed w-full h-full flex items-center justify-center bg-casino-1 z-50">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-blue-500"></div>
+        </div>
         <div class="container mx-auto min-h-screen p-6 flex flex-col items-center text-center">
             <h1 class="text-4xl font-bold text-yellow-400 mb-6">Roulette</h1>
 
@@ -69,6 +72,7 @@ export default {
     },
     data() {
         return {
+            loading: true,
             outcome: null,
             rows: Array(29).fill(null),
             cards: [
@@ -104,8 +108,9 @@ export default {
     },
     mounted() {
         this.fetchCurrentSpin();
-        this.fetchHistory();
-
+        this.fetchHistory().finally(() => {
+            this.loading = false;
+        });
 
         window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
             this.handleRemoteSpin(data.winningNumber, data.randomize);
