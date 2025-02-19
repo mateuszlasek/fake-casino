@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\BetPlacedEvent;
 use App\Events\RouletteSpinEvent;
+use App\Events\TimerTickEvent;
 use App\Models\RouletteHistory;
 use App\Models\RouletteState;
 use App\Services\RouletteService;
@@ -27,9 +28,9 @@ class RouletteController extends Controller
         $activeBets = $this->rouletteService->getActiveBets();
 
         return Inertia::render('Roulette', [
-            'balance' => $user->balance,
-            'user'    => $user,
-            'initialBets' => $activeBets
+            'balance'     => $user->balance,
+            'user'        => $user,
+            'initialBets' => $activeBets,
         ]);
     }
 
@@ -47,7 +48,7 @@ class RouletteController extends Controller
         $user = auth()->user();
 
         try {
-            $bet = $this->rouletteService->placeBet($user, $request->input('color'), (float)$request->input('amount'));
+            $bet = $this->rouletteService->placeBet($user, $request->input('color'), (float) $request->input('amount'));
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
@@ -61,30 +62,35 @@ class RouletteController extends Controller
         ], 200);
     }
 
-    public function spinWheel(Request $request)
+    public function spinWheel()
     {
-        $validator = Validator::make($request->all(), [
-            'activeBets' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-
         $winningNumber = $this->rouletteService->spinWheel();
-
         $startTime = now();
         $randomize = rand(-37, 37);
 
         RouletteState::updateOrCreate(
             ['id' => 1],
             [
-                'spinning' => true,
+                'spinning'       => true,
                 'winning_number' => $winningNumber,
-                'randomize' => $randomize,
-                'start_time' => $startTime,
+                'randomize'      => $randomize,
+                'start_time'     => $startTime,
             ]
         );
+
+        // Czas trwania timera: 30 sekund
+        $duration = 30;
+        $remainingTime = $duration;
+
+        // Emitujemy pierwszy tick (czas w ms)
+        event(new TimerTickEvent($remainingTime * 1000));
+
+        // Pętla odliczająca – co sekundę wysyłamy tick z pozostałym czasem
+        for ($i = 1; $i < $duration; $i++) {
+            $remainingTime = $duration - $i;
+            event(new TimerTickEvent($remainingTime * 1000));
+            sleep(1);
+        }
 
         event(new RouletteSpinEvent($winningNumber, $randomize, $startTime, $this->getHistory()));
 
@@ -96,10 +102,10 @@ class RouletteController extends Controller
         $state = RouletteState::first();
 
         return response()->json([
-            'spinning' => $state ? $state->spinning : false,
+            'spinning'      => $state ? $state->spinning : false,
             'winningNumber' => $state ? $state->winning_number : null,
-            'randomize' => $state ? $state->randomize : null,
-            'startTime' => $state ? $state->start_time : null,
+            'randomize'     => $state ? $state->randomize : null,
+            'startTime'     => $state ? $state->start_time : null,
         ]);
     }
 
@@ -112,5 +118,21 @@ class RouletteController extends Controller
     {
         $history = RouletteHistory::latest()->take(10)->pluck('color');
         return response()->json($history);
+    }
+
+    public function startTimer()
+    {
+        $duration = 30;
+        $remainingTime = $duration;
+
+        event(new TimerTickEvent($remainingTime * 1000));
+
+        for ($i = 0; $i < $duration; $i++) {
+            $remainingTime = $duration - $i;
+            event(new TimerTickEvent($remainingTime * 1000));
+            sleep(1);
+        }
+
+        $this->spinWheel();
     }
 }

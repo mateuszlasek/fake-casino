@@ -9,16 +9,17 @@
             <RouletteWheel :wheelStyles="wheelStyles" :rows="rows" :cards="cards" />
             <RouletteHistory :historyColors="historyColors" />
 
-            <div v-if="timerActive" class="w-full bg-gray-200 rounded-full h-2 my-4">
+            <!-- Timer Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2 my-4">
                 <div
-                    class="bg-green-500 h-full rounded-full transition-all duration-500"
+                    class="bg-green-500 h-full rounded-full"
                     :style="{ width: timerWidth + '%' }"
                 ></div>
             </div>
 
             <div class="w-full max-w-5xl mt-6">
                 <button
-                    :disabled="spinning"
+                    :disabled="spinning || timerActive"
                     @click="initiateSpin"
                     class="w-full h-12 bg-green-600 hover:bg-green-700 rounded text-white text-lg font-semibold transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -64,17 +65,17 @@ import RouletteHistory from "@/Components/Roulette/RouletteHistory.vue";
 export default {
     name: "Roulette",
     components: {
-        RouletteHistory,
         Layout,
         RouletteWheel,
         BalanceDisplay,
         BetAmountControls,
-        BetPlacementButtons
+        BetPlacementButtons,
+        RouletteHistory,
     },
     props: {
         balance: Number,
         user: Object,
-        initialBets: Object
+        initialBets: Object,
     },
     data() {
         return {
@@ -82,21 +83,21 @@ export default {
             outcome: null,
             rows: Array(29).fill(null),
             cards: [
-                {number: 1, color: "red"},
-                {number: 14, color: "black"},
-                {number: 2, color: "red"},
-                {number: 13, color: "black"},
-                {number: 3, color: "red"},
-                {number: 12, color: "black"},
-                {number: 4, color: "red"},
-                {number: 0, color: "green"},
-                {number: 11, color: "black"},
-                {number: 5, color: "red"},
-                {number: 10, color: "black"},
-                {number: 6, color: "red"},
-                {number: 9, color: "black"},
-                {number: 7, color: "red"},
-                {number: 8, color: "black"}
+                { number: 1, color: "red" },
+                { number: 14, color: "black" },
+                { number: 2, color: "red" },
+                { number: 13, color: "black" },
+                { number: 3, color: "red" },
+                { number: 12, color: "black" },
+                { number: 4, color: "red" },
+                { number: 0, color: "green" },
+                { number: 11, color: "black" },
+                { number: 5, color: "red" },
+                { number: 10, color: "black" },
+                { number: 6, color: "red" },
+                { number: 9, color: "black" },
+                { number: 7, color: "red" },
+                { number: 8, color: "black" },
             ],
             wheelStyles: {},
             totalBetRed: 0,
@@ -110,16 +111,28 @@ export default {
             blackPlayerTable: this.initialBets.black || [],
             spinning: false,
             historyColors: [],
-            timerActive: false, // Flaga aktywności timera
-            timerWidth: 100, // Początkowa szerokość paska
-            timeLeft: 10 // Czas pozostały do rozpoczęcia ruletki (10 sekund)
+            // Właściwości związane z timerem
+            timerActive: false,          // Czy timer już działa
+            timerWidth: 100,             // Pasek zaczyna od 100%
+            timerDuration: 30000,        // Całkowity czas timera – 30 sekund (w ms)
+            timerStart: null,            // Czas rozpoczęcia timera (ustawiany raz)
+            timerEnd: null,              // Czas zakończenia timera (timerStart + timerDuration)
+            animationFrame: null,        // ID requestAnimationFrame
         };
     },
     mounted() {
+        // Gdy nowy użytkownik wchodzi na stronę, pobieramy aktualny stan ruletki/timera
         this.fetchCurrentSpin();
         this.fetchHistory().finally(() => {
             this.loading = false;
         });
+
+        // Subskrypcja eventów z kanału "roulette"
+        window.Echo.channel("roulette")
+            .listen("TimerTickEvent", (event) => {
+                // Dla nowych użytkowników mogą przychodzić ticki – ale timer ustawiamy raz
+                this.onTimerTick(event.timeLeft);
+            });
 
         window.Echo.channel("roulette").listen("RouletteSpinEvent", (data) => {
             this.handleRemoteSpin(data.winningNumber, data.randomize);
@@ -130,7 +143,11 @@ export default {
                 this.updateBetTable(data);
             });
     },
-
+    beforeUnmount() {
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+        }
+    },
     methods: {
         async fetchHistory() {
             try {
@@ -143,7 +160,6 @@ export default {
         async initiateSpin() {
             if (this.spinning) return;
             this.spinning = true;
-
             try {
                 const response = await axios.post("/spin-wheel");
                 this.outcome = response.data.number;
@@ -152,39 +168,33 @@ export default {
                 this.spinning = false;
             }
         },
-
         handleRemoteSpin(winningNumber, randomize, duration = 6000) {
             if (typeof randomize !== "number" || isNaN(randomize)) {
                 randomize = 0;
             }
-
             const order = [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4];
             const position = order.indexOf(parseInt(winningNumber));
-
             if (position === -1) {
                 this.spinning = false;
                 return;
             }
-
             const rows = 12;
             const card = 75 + 3 * 2;
             const landingPosition = rows * 15 * card + position * card;
             const bezierValues = {x: 0.5, y: 0.5};
-
             this.wheelStyles = {
                 transitionTimingFunction: `cubic-bezier(0,${bezierValues.x},${bezierValues.y},1)`,
                 transitionDuration: `${duration}ms`,
-                transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`
+                transform: `translate3d(-${landingPosition + randomize}px, 0px, 0px)`,
             };
-
             setTimeout(() => {
                 const resetTo = -(position * card + randomize);
                 this.wheelStyles = {
                     transitionTimingFunction: "",
                     transitionDuration: "",
-                    transform: `translate3d(${resetTo}px, 0px, 0px)`
+                    transform: `translate3d(${resetTo}px, 0px, 0px)`,
                 };
-
+                // Resetujemy zakłady i pobieramy nową historię
                 this.activeBets = [];
                 this.totalBetRed = 0;
                 this.totalBetBlack = 0;
@@ -192,43 +202,36 @@ export default {
                 this.redPlayerTable = [];
                 this.greenPlayerTable = [];
                 this.blackPlayerTable = [];
-
                 this.updateBalance();
                 this.spinning = false;
                 this.fetchHistory();
                 axios.post("/clear-spin");
             }, duration);
         },
-
         async placeBet(color) {
             if (this.spinning) return;
-
             try {
                 const response = await axios.post("/place-bet", {
                     color: color,
-                    amount: this.betAmount
+                    amount: this.betAmount,
                 });
+                // Jeśli to pierwszy zakład, uruchamiamy timer (na backendzie dostępny endpoint /start-timer)
+                if (!this.timerActive) {
+                    axios.post("/start-timer");
+                }
                 this.activeBets.push(response.data.bet_id);
                 alert("Zakład przyjęty! Nowe saldo: " + response.data.new_balance);
                 this.balance = response.data.new_balance;
-
-                // Uruchomienie timera jeśli są aktywne zakłady
-                if (this.activeBets.length > 0 && !this.timerActive) {
-                    this.startTimer();
-                }
             } catch (error) {
                 console.error("Błąd przy składaniu zakładu:", error);
                 alert("Błąd: " + error.response.data.error);
             }
         },
-
         updateBetTable(betData) {
-            console.log("Aktualizuję tabelę zakładów:", betData);
             const newBet = {
                 username: betData.username,
-                amount: betData.amount
+                amount: betData.amount,
             };
-
             if (betData.color === "red") {
                 this.redPlayerTable.push(newBet);
             } else if (betData.color === "green") {
@@ -236,10 +239,8 @@ export default {
             } else if (betData.color === "black") {
                 this.blackPlayerTable.push(newBet);
             }
-
             this.updateTotalBet(betData.color, betData.amount);
         },
-
         updateTotalBet(color, betAmount) {
             if (color === "red") {
                 this.totalBetRed += betAmount;
@@ -249,7 +250,6 @@ export default {
                 this.totalBetBlack += betAmount;
             }
         },
-
         async updateBalance() {
             try {
                 const response = await axios.get("/get-balance", {params: {user_id: this.user.id}});
@@ -258,41 +258,60 @@ export default {
                 alert("Błąd: " + error.response.data.error);
             }
         },
-
         handleMaxBet() {
             this.betAmount = this.balance;
         },
-
+        // Metoda pobierająca aktualny stan ruletki/timera – używana przy wejściu nowego użytkownika
         async fetchCurrentSpin() {
             try {
                 const response = await axios.get("/get-current-spin");
-                if (response.data.spinning) {
-                    const elapsedTime = Date.now() - new Date(response.data.startTime).getTime();
-                    const remainingTime = Math.max(0, 6000 - elapsedTime);
-
-                    this.handleRemoteSpin(response.data.winningNumber, response.data.randomize);
+                if (response.data.spinning && response.data.startTime) {
+                    const startTime = new Date(response.data.startTime).getTime();
+                    const now = Date.now();
+                    const elapsedTime = now - startTime;
+                    if (elapsedTime < this.timerDuration) {
+                        const remainingTime = this.timerDuration - elapsedTime;
+                        // Jeśli timer jeszcze nie został ustawiony lokalnie, ustawiamy go
+                        if (!this.timerActive) {
+                            this.onTimerTick(remainingTime);
+                        }
+                    } else {
+                        // Timer wygasł – ustawiamy pasek na 0
+                        this.timerActive = false;
+                        this.timerWidth = 0;
+                    }
                 }
             } catch (error) {
                 console.error("Błąd podczas pobierania stanu ruletki:", error);
             }
         },
-
-        // Timer
-        startTimer() {
-            this.timerActive = true;
-            const interval = setInterval(() => {
-                if (this.timeLeft > 0) {
-                    this.timeLeft -= 1;
-                    this.timerWidth = (this.timeLeft / 10) * 100; // Obliczanie szerokości paska
-                } else {
-                    clearInterval(interval);
+        // Metoda ustawiająca timer tylko raz – przy pierwszym ticku (lub przy wejściu nowego użytkownika)
+        onTimerTick(timeLeftMs) {
+            if (!this.timerActive) {
+                const elapsed = this.timerDuration - timeLeftMs;
+                this.timerStart = Date.now() - elapsed;
+                this.timerEnd = this.timerStart + this.timerDuration;
+                this.timerActive = true;
+                this.startAnimation();
+            }
+            // Kolejne ticki nie zmieniają już timerStart/timerEnd – dzięki temu nie występują przeskoki.
+        },
+        // Płynna animacja paska przy użyciu requestAnimationFrame
+        startAnimation() {
+            const update = () => {
+                const now = Date.now();
+                const remaining = this.timerEnd - now;
+                if (remaining <= 0) {
+                    this.timerWidth = 0;
                     this.timerActive = false;
-                    this.timerWidth = 100; // Resetujemy pasek
-                    this.timeLeft = 10; // Resetujemy czas
-                    this.initiateSpin(); // Rozpoczynamy spin
+                    this.animationFrame = null;
+                    return;
                 }
-            }, 1000); // Co sekundy
-        }
-    }
+                this.timerWidth = (remaining / this.timerDuration) * 100;
+                this.animationFrame = requestAnimationFrame(update);
+            };
+            this.animationFrame = requestAnimationFrame(update);
+        },
+    },
 };
 </script>
