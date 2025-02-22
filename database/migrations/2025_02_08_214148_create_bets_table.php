@@ -13,6 +13,7 @@ class CreateBetsTable extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('color');
             $table->decimal('amount', 10, 2);
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }
