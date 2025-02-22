@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Bet;
 use App\Models\RouletteHistory;
+use App\Models\RouletteState;
 use App\Models\User;
 use Exception;
 
@@ -21,18 +22,41 @@ class RouletteService
             'amount'  => $amount,
         ]);
 
-        $user->balance -= $amount;
-        $user->save();
+        $user->decrement('balance', $amount);
 
         return $bet;
     }
 
-    public function spinWheel(): int
+    public function initiateSpin(): array
     {
         $winningNumber = rand(0, 14);
-        $winningColor = $this->getColorByNumber($winningNumber);
+        $randomize = rand(-37, 37);
+        $startTime = now();
+        $duration = 30000;
 
-        $activeBets = Bet::where('active', true)->get();
+        RouletteState::updateOrCreate(
+            ['id' => 1],
+            [
+                'spinning'       => true,
+                'winning_number' => $winningNumber,
+                'randomize'      => $randomize,
+                'start_time'     => $startTime,
+            ]
+        );
+
+        $this->processBets($winningNumber);
+
+        return [
+            'winningNumber' => $winningNumber,
+            'randomize'     => $randomize,
+            'startTime'     => $startTime,
+            'duration'      => $duration,
+        ];
+    }
+
+    private function processBets(int $winningNumber): void
+    {
+        $winningColor = $this->getColorByNumber($winningNumber);
 
         RouletteHistory::create(['color' => $winningColor]);
         $historyCount = RouletteHistory::count();
@@ -40,19 +64,14 @@ class RouletteService
             RouletteHistory::oldest()->limit($historyCount - 10)->delete();
         }
 
+        $activeBets = Bet::where('active', true)->get();
         foreach ($activeBets as $bet) {
             $user = $bet->user;
-
             if ($bet->color === $winningColor) {
-                $multiplier = ($bet->color === 'green') ? 14 : 2;
-                $user->balance += $bet->amount * $multiplier;
-                $user->save();
+                $multiplier = ($winningColor === 'green') ? 14 : 2;
+                $user->increment('balance', $bet->amount * $multiplier);
             }
-
-            $bet->update(['active' => false]);
         }
-
-        return $winningNumber;
     }
 
     private function getColorByNumber(int $number): string
@@ -67,10 +86,10 @@ class RouletteService
     public function getActiveBets(): array
     {
         return Bet::where('active', true)
-        ->with('user')
+            ->with('user')
             ->get()
             ->groupBy('color')
-            ->map(function ($bets, $color) {
+            ->map(function ($bets) {
                 return $bets->map(function ($bet) {
                     return [
                         'username' => $bet->user->name,
@@ -79,5 +98,27 @@ class RouletteService
                 });
             })
             ->toArray();
+    }
+
+    public function getCurrentState(): array
+    {
+        $state = RouletteState::first();
+        return [
+            'spinning'      => $state ? $state->spinning : false,
+            'winningNumber' => $state->winning_number ?? null,
+            'randomize'     => $state->randomize ?? null,
+            'startTime'     => $state->start_time ?? null,
+        ];
+    }
+
+    public function clearSpin(): void
+    {
+        RouletteState::where('id', 1)->update(['spinning' => false]);
+        Bet::where('active', true)->update(['active' => false]);
+    }
+
+    public function getHistory(): array
+    {
+        return RouletteHistory::latest()->take(10)->pluck('color')->toArray();
     }
 }

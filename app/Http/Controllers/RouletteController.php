@@ -3,21 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Events\BetPlacedEvent;
-use App\Events\RouletteSpinEvent;
 use App\Events\TimerStartedEvent;
-use App\Events\TimerTickEvent;
+use App\Http\Requests\PlaceBetRequest;
 use App\Jobs\CompleteRouletteSpinJob;
-use App\Models\RouletteHistory;
 use App\Models\RouletteState;
 use App\Services\RouletteService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
 class RouletteController extends Controller
 {
-    protected $rouletteService;
+    private RouletteService $rouletteService;
 
     public function __construct(RouletteService $rouletteService)
     {
@@ -36,18 +32,9 @@ class RouletteController extends Controller
         ]);
     }
 
-    public function placeBet(Request $request)
+    public function placeBet(PlaceBetRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'color'  => 'required|string|in:red,green,black',
-            'amount' => 'required|numeric|min:1',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-
-        $user = auth()->user();
+        $user = $request->user();
 
         try {
             $bet = $this->rouletteService->placeBet($user, $request->input('color'), (float) $request->input('amount'));
@@ -64,68 +51,34 @@ class RouletteController extends Controller
         ], 200);
     }
 
-    public function spinWheel()
+    public function spinWheel(): JsonResponse
     {
-        $winningNumber = $this->rouletteService->spinWheel();
-        $startTime = now();
-        $randomize = rand(-37, 37);
+        $state = $this->rouletteService->initiateSpin();
 
-        RouletteState::updateOrCreate(
-            ['id' => 1],
-            [
-                'spinning'       => true,
-                'winning_number' => $winningNumber,
-                'randomize'      => $randomize,
-                'start_time'     => $startTime,
-            ]
-        );
+        event(new TimerStartedEvent($state['startTime'], $state['duration']));
 
-        $duration = 30000;
-        event(new TimerStartedEvent($startTime, $duration));
-
-        dispatch(new CompleteRouletteSpinJob($winningNumber, $randomize, $startTime))
+        dispatch(new CompleteRouletteSpinJob($state['winningNumber'], $state['randomize'], $state['startTime']))
             ->delay(now()->addSeconds(30));
 
-        return response()->json(['number' => $winningNumber]);
+        return response()->json(['number' => $state['winningNumber']]);
     }
 
-
-    public function getCurrentSpin()
+    public function getCurrentSpin(): JsonResponse
     {
-        $state = RouletteState::first();
+        $state = $this->rouletteService->getCurrentState();
 
-        return response()->json([
-            'spinning'      => $state ? $state->spinning : false,
-            'winningNumber' => $state ? $state->winning_number : null,
-            'randomize'     => $state ? $state->randomize : null,
-            'startTime'     => $state ? $state->start_time : null,
-        ]);
+        return response()->json($state);
     }
 
-    public function clearSpin()
+    public function clearSpin(): JsonResponse
     {
-        RouletteState::where('id', 1)->update(['spinning' => false]);
+        $this->rouletteService->clearSpin();
+        return response()->json(['message' => 'Spin cleared']);
     }
 
-    public function getHistory()
+    public function getHistory(): JsonResponse
     {
-        $history = RouletteHistory::latest()->take(10)->pluck('color');
+        $history = $this->rouletteService->getHistory();
         return response()->json($history);
-    }
-
-    public function startTimer()
-    {
-        $duration = 30;
-        $remainingTime = $duration;
-
-        event(new TimerTickEvent($remainingTime * 1000));
-
-        for ($i = 0; $i < $duration; $i++) {
-            $remainingTime = $duration - $i;
-            event(new TimerTickEvent($remainingTime * 1000));
-            sleep(1);
-        }
-
-        $this->spinWheel();
     }
 }
