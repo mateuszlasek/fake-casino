@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Events\BetPlacedEvent;
 use App\Events\RouletteSpinEvent;
+use App\Events\TimerStartedEvent;
 use App\Events\TimerTickEvent;
+use App\Jobs\CompleteRouletteSpinJob;
 use App\Models\RouletteHistory;
 use App\Models\RouletteState;
 use App\Services\RouletteService;
@@ -78,24 +80,15 @@ class RouletteController extends Controller
             ]
         );
 
-        // Czas trwania timera: 30 sekund
-        $duration = 30;
-        $remainingTime = $duration;
+        $duration = 30000;
+        event(new TimerStartedEvent($startTime, $duration));
 
-        // Emitujemy pierwszy tick (czas w ms)
-        event(new TimerTickEvent($remainingTime * 1000));
-
-        // Pętla odliczająca – co sekundę wysyłamy tick z pozostałym czasem
-        for ($i = 1; $i < $duration; $i++) {
-            $remainingTime = $duration - $i;
-            event(new TimerTickEvent($remainingTime * 1000));
-            sleep(1);
-        }
-
-        event(new RouletteSpinEvent($winningNumber, $randomize, $startTime, $this->getHistory()));
+        dispatch(new CompleteRouletteSpinJob($winningNumber, $randomize, $startTime))
+            ->delay(now()->addSeconds(30));
 
         return response()->json(['number' => $winningNumber]);
     }
+
 
     public function getCurrentSpin()
     {
