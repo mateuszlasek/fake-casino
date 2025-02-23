@@ -1,5 +1,10 @@
 <script setup>
 import Layout from "@/Layouts/Layout.vue";
+
+
+const goToRoulette = () => {
+    window.location.href = "/roulette";
+};
 </script>
 
 <template>
@@ -50,6 +55,7 @@ import Layout from "@/Layouts/Layout.vue";
                             <h2 class="text-xl font-bold text-yellow-400 mb-2">Roulette Royale</h2>
                             <p class="text-gray-300 mb-4">European roulette with premium experience</p>
                             <button
+                                @click="goToRoulette"
                                 class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg w-full transition-colors duration-300"
                             >
                                 Place Bet
