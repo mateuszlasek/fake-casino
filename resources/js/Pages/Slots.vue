@@ -27,8 +27,8 @@ const spin = async () => {
 
         const start = Date.now();
         let lastUpdate = 0;
-        const animationDuration = 4000; // 4 sekundy
-        const updateInterval = 200; // Aktualizacja co 200ms
+        const animationDuration = 4000;
+        const updateInterval = 200;
 
         const animate = () => {
             const now = Date.now();
@@ -51,15 +51,15 @@ const spin = async () => {
                     });
                 }
                 resultMessage.value = response.data.is_win
-                    ? `🎉 Wygrałeś ${response.data.prize}! 🎉`
-                    : 'Spróbuj ponownie!';
+                    ? `🎉 You won ${response.data.prize}! 🎉`
+                    : 'Try again!';
             }
         };
 
         animate();
     } catch (error) {
         console.error('Spin error:', error);
-        resultMessage.value = error.response?.data?.error || 'Błąd podczas gry';
+        resultMessage.value = error.response?.data?.error || 'Error during the game';
         isSpinning.value = false;
     }
 };
@@ -70,10 +70,9 @@ const spin = async () => {
         <div class="max-w-md mx-auto p-6 bg-casino-2 rounded-lg shadow-lg">
             <div class="text-center mb-8">
                 <div class="text-2xl font-bold text-yellow-400 mb-4">
-                    BALANS: {{ balance }}
+                    BALANCE: {{ balance }}
                 </div>
 
-                <!-- Slot Reels -->
                 <div class="flex justify-center gap-4 mb-8">
                     <div
                         v-for="(symbol, index) in slots"
@@ -85,7 +84,6 @@ const spin = async () => {
                     </div>
                 </div>
 
-                <!-- Bet Controls -->
                 <div class="mb-6">
                     <input
                         v-model.number="bet"
@@ -97,7 +95,6 @@ const spin = async () => {
                     >
                 </div>
 
-                <!-- Spin Button -->
                 <button
                     @click="spin"
                     :disabled="!canSpin"
@@ -105,10 +102,9 @@ const spin = async () => {
                  hover:bg-yellow-300 transition-colors duration-300 disabled:opacity-50
                  disabled:cursor-not-allowed transform hover:scale-105"
                 >
-                    {{ isSpinning ? 'OBRACAM...' : 'OBRÓĆ' }}
+                    {{ isSpinning ? 'SPINNING...' : 'SPIN' }}
                 </button>
 
-                <!-- Result Message -->
                 <div v-if="resultMessage" class="mt-6 text-xl font-semibold text-yellow-400 animate-pulse">
                     {{ resultMessage }}
                 </div>
