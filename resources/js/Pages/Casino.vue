@@ -5,6 +5,10 @@ import Layout from "@/Layouts/Layout.vue";
 const goToRoulette = () => {
     window.location.href = "/roulette";
 };
+
+const goToSlots = () => {
+    window.location.href = "/slots";
+};
 </script>
 
 <template>
@@ -39,6 +43,7 @@ const goToRoulette = () => {
                             <h2 class="text-xl font-bold text-yellow-400 mb-2">Slots</h2>
                             <p class="text-gray-300 mb-4">Classic slot machine with golden symbols</p>
                             <button
+                                @click="goToSlots"
                                 class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg w-full transition-colors duration-300"
                             >
                                 Spin Now
