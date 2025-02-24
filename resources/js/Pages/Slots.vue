@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import Layout from '@/Layouts/Layout.vue';
 import { usePage } from '@inertiajs/vue3';
@@ -11,10 +11,51 @@ const isSpinning = ref(false);
 const bet = ref(10);
 const resultMessage = ref('');
 const balance = ref(page.props.balance);
+const spinningSymbols = ref([[], [], []]);
+const offsets = ref([0, 0, 0]);
+const symbolHeight = 80; // Dostosuj do rzeczywistej wysokości symbolu
 
 const canSpin = computed(() => {
     return !isSpinning.value && bet.value > 0 && balance.value >= bet.value;
 });
+
+const generateSymbolSequence = (currentSymbol, targetSymbol, count = 20) => {
+    const sequence = [currentSymbol];
+    for (let i = 0; i < count; i++) {
+        sequence.push(symbols[Math.floor(Math.random() * symbols.length)]);
+    }
+    sequence.push(targetSymbol);
+    return sequence;
+};
+
+const animateSlot = (index, targetSymbol, duration) => {
+    return new Promise(resolve => {
+        const currentSymbol = slots.value[index];
+        const symbolsSequence = generateSymbolSequence(currentSymbol, targetSymbol);
+        spinningSymbols.value[index] = symbolsSequence;
+
+        const startTime = Date.now();
+        const totalOffset = -(symbolsSequence.length - 1) * symbolHeight;
+
+        const animate = () => {
+            const now = Date.now();
+            const progress = Math.min((now - startTime) / duration, 1);
+            const currentOffset = progress * totalOffset;
+            offsets.value[index] = currentOffset;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                spinningSymbols.value[index] = [targetSymbol];
+                offsets.value[index] = 0;
+                slots.value[index] = targetSymbol;
+                resolve();
+            }
+        };
+
+        requestAnimationFrame(animate);
+    });
+};
 
 const spin = async () => {
     if (!canSpin.value) return;
@@ -24,42 +65,29 @@ const spin = async () => {
 
     try {
         const response = await axios.post('/spin', { bet: bet.value });
+        const stopTimes = [2000, 3000, 4000];
 
-        const start = Date.now();
-        let lastUpdate = 0;
-        const animationDuration = 4000;
-        const updateInterval = 200;
+        // Inicjuj animacje dla każdego slotu
+        const animations = slots.value.map((_, index) =>
+            animateSlot(index, response.data.result[index], stopTimes[index])
+        );
 
-        const animate = () => {
-            const now = Date.now();
-            const elapsed = now - start;
+        await Promise.all(animations);
 
-            if (elapsed < animationDuration) {
-                if (now - lastUpdate >= updateInterval) {
-                    slots.value = Array(3).fill().map(() => symbols[Math.floor(Math.random() * symbols.length)]);
-                    lastUpdate = now;
-                }
-                requestAnimationFrame(animate);
-            } else {
-                slots.value = response.data.result;
-                isSpinning.value = false;
-                balance.value = response.data.balance;
-                if (response.data.is_win) {
-                    document.querySelectorAll('.slot').forEach(slot => {
-                        slot.classList.add('win-animation');
-                        setTimeout(() => slot.classList.remove('win-animation'), 1500);
-                    });
-                }
-                resultMessage.value = response.data.is_win
-                    ? `🎉 You won ${response.data.prize}! 🎉`
-                    : 'Try again!';
-            }
-        };
-
-        animate();
+        balance.value = response.data.balance;
+        if (response.data.is_win) {
+            document.querySelectorAll('.slot-container').forEach(slot => {
+                slot.classList.add('win-animation');
+                setTimeout(() => slot.classList.remove('win-animation'), 1500);
+            });
+        }
+        resultMessage.value = response.data.is_win
+            ? `🎉 You won ${response.data.prize}! 🎉`
+            : 'Try again!';
     } catch (error) {
         console.error('Spin error:', error);
         resultMessage.value = error.response?.data?.error || 'Error during the game';
+    } finally {
         isSpinning.value = false;
     }
 };
@@ -75,12 +103,23 @@ const spin = async () => {
 
                 <div class="flex justify-center gap-4 mb-8">
                     <div
-                        v-for="(symbol, index) in slots"
+                        v-for="(_, index) in 3"
                         :key="index"
-                        class="slot w-20 h-20 bg-casino-1 flex items-center justify-center text-4xl rounded-lg
-                   border-2 border-yellow-400 transition-all duration-500 ease-in-out"
+                        class="slot-container w-20 h-20 bg-casino-1 rounded-lg
+                        border-2 border-yellow-400 overflow-hidden relative"
                     >
-                        {{ symbol }}
+                        <div
+                            class="symbols absolute w-full"
+                            :style="{ transform: `translateY(${offsets[index]}px)` }"
+                        >
+                            <div
+                                v-for="(symbol, i) in spinningSymbols[index]"
+                                :key="i"
+                                class="symbol h-20 flex items-center justify-center text-4xl"
+                            >
+                                {{ symbol }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -91,7 +130,7 @@ const spin = async () => {
                         min="1"
                         :max="balance"
                         class="w-32 px-4 py-2 bg-casino-1 text-white rounded-lg focus:outline-none
-                   focus:ring-2 focus:ring-yellow-400 text-center font-bold"
+                        focus:ring-2 focus:ring-yellow-400 text-center font-bold"
                     >
                 </div>
 
@@ -99,8 +138,8 @@ const spin = async () => {
                     @click="spin"
                     :disabled="!canSpin"
                     class="px-8 py-3 bg-yellow-400 text-casino-2 font-bold rounded-lg
-                 hover:bg-yellow-300 transition-colors duration-300 disabled:opacity-50
-                 disabled:cursor-not-allowed transform hover:scale-105"
+                    hover:bg-yellow-300 transition-colors duration-300 disabled:opacity-50
+                    disabled:cursor-not-allowed transform hover:scale-105"
                 >
                     {{ isSpinning ? 'SPINNING...' : 'SPIN' }}
                 </button>
@@ -124,13 +163,23 @@ const spin = async () => {
     animation: win-flash 1.5s ease-in-out 3;
 }
 
-.slot {
+.slot-container {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     perspective: 1000px;
 }
 
-.slot::before {
+.symbols {
+    transition: transform 0.1s linear;
+}
+
+.symbol {
+    transition: all 0.1s ease;
+}
+
+.slot-container::before {
     content: '';
     @apply absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-20 rounded-lg;
+    pointer-events: none;
+    z-index: 1;
 }
 </style>
