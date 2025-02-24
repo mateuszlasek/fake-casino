@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue';
 import axios from 'axios';
 import Layout from '@/Layouts/Layout.vue';
 import { usePage } from '@inertiajs/vue3';
@@ -11,9 +11,15 @@ const isSpinning = ref(false);
 const bet = ref(10);
 const resultMessage = ref('');
 const balance = ref(page.props.balance);
-const spinningSymbols = ref([[], [], []]);
+const spinningSymbols = ref([['🍒'], ['🍒'], ['🍒']]);
 const offsets = ref([0, 0, 0]);
-const symbolHeight = 80; // Dostosuj do rzeczywistej wysokości symbolu
+const symbolHeight = 80;
+
+onMounted(() => {
+    slots.value.forEach((_, index) => {
+        spinningSymbols.value[index] = generateSymbolSequence('🍒', '🍒', 1);
+    });
+});
 
 const canSpin = computed(() => {
     return !isSpinning.value && bet.value > 0 && balance.value >= bet.value;
@@ -35,12 +41,12 @@ const animateSlot = (index, targetSymbol, duration) => {
         spinningSymbols.value[index] = symbolsSequence;
 
         const startTime = Date.now();
-        const totalOffset = -(symbolsSequence.length - 1) * symbolHeight;
+        const totalOffset = (symbolsSequence.length - 1) * symbolHeight;
 
         const animate = () => {
             const now = Date.now();
             const progress = Math.min((now - startTime) / duration, 1);
-            const currentOffset = progress * totalOffset;
+            const currentOffset = totalOffset * (1 - progress);
             offsets.value[index] = currentOffset;
 
             if (progress < 1) {
@@ -64,10 +70,9 @@ const spin = async () => {
     resultMessage.value = '';
 
     try {
-        const response = await axios.post('/spin', { bet: bet.value });
+        const response = await axios.post('/spin', {bet: bet.value});
         const stopTimes = [2000, 3000, 4000];
 
-        // Inicjuj animacje dla każdego slotu
         const animations = slots.value.map((_, index) =>
             animateSlot(index, response.data.result[index], stopTimes[index])
         );
@@ -110,7 +115,7 @@ const spin = async () => {
                     >
                         <div
                             class="symbols absolute w-full"
-                            :style="{ transform: `translateY(${offsets[index]}px)` }"
+                            :style="{ transform: `translateY(${-offsets[index]}px)` }"
                         >
                             <div
                                 v-for="(symbol, i) in spinningSymbols[index]"
@@ -154,9 +159,15 @@ const spin = async () => {
 
 <style>
 @keyframes win-flash {
-    0% { background-color: #2a2a2a; }
-    50% { background-color: #4a7023; }
-    100% { background-color: #2a2a2a; }
+    0% {
+        background-color: #2a2a2a;
+    }
+    50% {
+        background-color: #4a7023;
+    }
+    100% {
+        background-color: #2a2a2a;
+    }
 }
 
 .win-animation {
@@ -166,10 +177,6 @@ const spin = async () => {
 .slot-container {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     perspective: 1000px;
-}
-
-.symbols {
-    transition: transform 0.1s linear;
 }
 
 .symbol {
