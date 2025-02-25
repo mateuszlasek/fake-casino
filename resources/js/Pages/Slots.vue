@@ -172,10 +172,6 @@ const spin = async () => {
     }
 }
 
-.win-animation {
-    animation: win-flash 1.5s ease-in-out 3;
-}
-
 .slot-container {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     perspective: 1000px;
