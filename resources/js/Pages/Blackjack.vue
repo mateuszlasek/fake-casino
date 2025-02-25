@@ -8,7 +8,6 @@ const playerCards = ref([]);
 const dealerCards = ref([]);
 const playerScore = ref(0);
 const dealerScore = ref(0);
-// Ustawiamy gameOver na true, aby przyciski HIT i STAND były zablokowane, gdy gra nie jest aktywna
 const gameOver = ref(true);
 const bet = ref(10);
 const result = ref('');
@@ -28,7 +27,6 @@ const startGame = async () => {
         dealerCards.value = response.data.dealerCards;
         playerScore.value = response.data.playerScore;
         dealerScore.value = response.data.dealerScore;
-        // Rozpoczęcie gry – odblokowujemy przyciski
         gameOver.value = false;
         result.value = '';
         balance.value -= bet.value;
@@ -61,7 +59,7 @@ const stand = async () => {
 
         switch(response.data.result) {
             case 'player':
-                result.value = `You win ${bet.value * 1.5} coins!`;
+                result.value = `🎉 You won ${bet.value * 1.5} ! 🎉`;
                 balance.value += bet.value * 2.5;
                 break;
             case 'dealer':

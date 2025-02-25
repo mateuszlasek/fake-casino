@@ -55,10 +55,10 @@ onMounted(() => {
                     </div>
 
                     <div class="hidden md:flex space-x-6">
-                        <Link href="/">Home</Link>
-                        <Link href="/about">About</Link>
-                        <Link href="/casino">Casino</Link>
-                        <Link href="/contact">Contact</Link>
+                        <Link href="/" class="hover:text-yellow-400 transition duration-300 ease-in-out">Home</Link>
+                        <Link href="/about" class="hover:text-yellow-400 transition duration-300 ease-in-out">About</Link>
+                        <Link href="/casino" class="hover:text-yellow-400 transition duration-300 ease-in-out">Casino</Link>
+                        <Link href="/contact" class="hover:text-yellow-400 transition duration-300 ease-in-out">Contact</Link>
                     </div>
 
                     <div class="flex items-center space-x-6">
