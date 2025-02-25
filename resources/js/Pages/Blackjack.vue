@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import {onMounted, onUnmounted, ref} from 'vue';
 import axios from 'axios';
 import Layout from '../Layouts/Layout.vue';
 import { usePage } from "@inertiajs/vue3";
@@ -29,9 +29,49 @@ const startGame = async () => {
         dealerScore.value = response.data.dealerScore;
         gameOver.value = false;
         result.value = '';
-        balance.value -= bet.value;
+        balance.value = response.data.balance;
     } catch (error) {
-        console.error('Error starting game:', error);
+        console.error('Error while starting the game:', error);
+    }
+};
+
+const handleBeforeUnload = (event) => {
+    if (!gameOver.value) {
+        event.preventDefault();
+        event.returnValue = '';
+    }
+};
+
+
+onMounted(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+const stand = async () => {
+    try {
+        const response = await axios.post('/blackjack/stand');
+        dealerCards.value = response.data.dealerCards;
+        dealerScore.value = response.data.dealerScore;
+        gameOver.value = true;
+        balance.value = response.data.balance;
+
+        switch(response.data.result) {
+            case 'player':
+                result.value = `🎉 You won ${bet.value * 1.5} ! 🎉`;
+                break;
+            case 'dealer':
+                result.value = 'Dealer wins!';
+                break;
+            case 'push':
+                result.value = 'Bust! Bet returned';
+                break;
+        }
+    } catch (error) {
+        console.error('Error during stand:', error);
     }
 };
 
@@ -50,30 +90,6 @@ const hit = async () => {
     }
 };
 
-const stand = async () => {
-    try {
-        const response = await axios.post('/blackjack/stand');
-        dealerCards.value = response.data.dealerCards;
-        dealerScore.value = response.data.dealerScore;
-        gameOver.value = true;
-
-        switch(response.data.result) {
-            case 'player':
-                result.value = `🎉 You won ${bet.value * 1.5} ! 🎉`;
-                balance.value += bet.value * 2.5;
-                break;
-            case 'dealer':
-                result.value = 'Dealer wins!';
-                break;
-            case 'push':
-                result.value = 'Push! Bet returned';
-                balance.value += bet.value;
-                break;
-        }
-    } catch (error) {
-        console.error('Error standing:', error);
-    }
-};
 </script>
 
 <template>
@@ -90,7 +106,6 @@ const stand = async () => {
                     v-model.number="bet"
                     type="number"
                     min="10"
-                    max="1000"
                     class="w-32 px-4 py-2 bg-gray-700 text-white rounded-lg text-center font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 >
                 <button

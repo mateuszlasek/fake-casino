@@ -21,6 +21,14 @@ class BlackjackService
         return $deck;
     }
 
+    public function dealCards($deck): array
+    {
+        $playerCards = [array_pop($deck), array_pop($deck)];
+        $dealerCards = [array_pop($deck), array_pop($deck)];
+
+        return [$playerCards, $dealerCards];
+    }
+
     public function calculateScore(array $cards): int
     {
         $score = 0;
@@ -53,5 +61,42 @@ class BlackjackService
         if ($dealerScore > 21) return 'player';
         if ($playerScore === $dealerScore) return 'push';
         return ($playerScore > $dealerScore) ? 'player' : 'dealer';
+    }
+
+    public function updateUserBalance($user, $bet, $result): void
+    {
+        switch ($result) {
+            case 'player':
+                $user->balance += $bet * 2.5;
+                break;
+            case 'push':
+                $user->balance += $bet;
+                break;
+            case 'dealer':
+                break;
+        }
+
+        $user->save();
+    }
+
+    public function dealerPlay($deck, $dealerCards)
+    {
+        $dealerScore = $this->calculateScore($dealerCards);
+        while ($dealerScore < 17) {
+            $dealerCards[] = array_pop($deck);
+            $dealerScore = $this->calculateScore($dealerCards);
+        }
+
+        return $dealerCards;
+    }
+
+    public function checkGameOver($playerScore): bool
+    {
+        return $playerScore > 21;
+    }
+
+    public function validateUserBalance($user, $bet): bool
+    {
+        return $user->balance >= $bet;
     }
 }

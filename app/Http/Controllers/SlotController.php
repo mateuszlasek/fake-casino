@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Services\SlotService;
+use Mockery\Exception;
 
 class SlotController extends Controller
 {
@@ -26,14 +27,23 @@ class SlotController extends Controller
     public function spin(Request $request)
     {
         $user = Auth::user();
-        $bet = $request->validate(['bet' => 'required|numeric|min:1'])['bet'];
+
+        $bet = $request->validate([
+            'bet' => 'required|numeric|min:1'
+        ])['bet'];
 
         try {
             $result = $this->slotService->spin($user, $bet);
 
             return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], $e->getCode());
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
+            return response()->json([
+                'error' => 'Something went wrong: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

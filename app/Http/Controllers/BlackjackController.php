@@ -17,16 +17,24 @@ class BlackjackController extends Controller
 
     public function startGame(Request $request)
     {
-        $deck = $this->blackjackService->createDeck();
+        $user = auth()->user();
+        $bet = $request->bet;
 
-        $playerCards = [array_pop($deck), array_pop($deck)];
-        $dealerCards = [array_pop($deck), array_pop($deck)];
+        if (!$this->blackjackService->validateUserBalance($user, $bet)) {
+            return response()->json(['error' => 'Not enough balance!'], 400);
+        }
+
+        $user->balance -= $bet;
+        $user->save();
+
+        $deck = $this->blackjackService->createDeck();
+        list($playerCards, $dealerCards) = $this->blackjackService->dealCards($deck);
 
         Session::put('blackjack', [
             'deck' => $deck,
             'playerCards' => $playerCards,
             'dealerCards' => $dealerCards,
-            'bet' => $request->bet,
+            'bet' => $bet,
             'gameOver' => false
         ]);
 
@@ -35,6 +43,34 @@ class BlackjackController extends Controller
             'dealerCards' => [$dealerCards[0], 'hidden'],
             'playerScore' => $this->blackjackService->calculateScore($playerCards),
             'dealerScore' => $this->blackjackService->calculateScore([$dealerCards[0]]),
+            'balance' => $user->balance
+        ]);
+    }
+
+    public function stand()
+    {
+        $game = Session::get('blackjack');
+        $dealerCards = $this->blackjackService->dealerPlay($game['deck'], $game['dealerCards']);
+        $dealerScore = $this->blackjackService->calculateScore($dealerCards);
+        $playerScore = $this->blackjackService->calculateScore($game['playerCards']);
+
+        $result = $this->blackjackService->determineWinner($playerScore, $dealerScore);
+
+        $user = auth()->user();
+        $bet = $game['bet'];
+
+        $this->blackjackService->updateUserBalance($user, $bet, $result);
+
+        $game['gameOver'] = true;
+        Session::put('blackjack', $game);
+
+        return response()->json([
+            'dealerCards' => $dealerCards,
+            'playerScore' => $playerScore,
+            'dealerScore' => $dealerScore,
+            'gameOver' => true,
+            'result' => $result,
+            'balance' => $user->balance
         ]);
     }
 
@@ -44,7 +80,7 @@ class BlackjackController extends Controller
         $game['playerCards'][] = array_pop($game['deck']);
         $playerScore = $this->blackjackService->calculateScore($game['playerCards']);
 
-        if ($playerScore > 21) {
+        if ($this->blackjackService->checkGameOver($playerScore)) {
             $game['gameOver'] = true;
         }
 
@@ -54,29 +90,6 @@ class BlackjackController extends Controller
             'playerCards' => $game['playerCards'],
             'playerScore' => $playerScore,
             'gameOver' => $game['gameOver']
-        ]);
-    }
-
-    public function stand()
-    {
-        $game = Session::get('blackjack');
-        $dealerScore = $this->blackjackService->calculateScore($game['dealerCards']);
-
-        while ($dealerScore < 17) {
-            $game['dealerCards'][] = array_pop($game['deck']);
-            $dealerScore = $this->blackjackService->calculateScore($game['dealerCards']);
-        }
-
-        $playerScore = $this->blackjackService->calculateScore($game['playerCards']);
-        $game['gameOver'] = true;
-        Session::put('blackjack', $game);
-
-        return response()->json([
-            'dealerCards' => $game['dealerCards'],
-            'playerScore' => $playerScore,
-            'dealerScore' => $dealerScore,
-            'gameOver' => true,
-            'result' => $this->blackjackService->determineWinner($playerScore, $dealerScore)
         ]);
     }
 }

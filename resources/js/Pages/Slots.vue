@@ -66,6 +66,8 @@ const animateSlot = (index, targetSymbol, duration) => {
 const spin = async () => {
     if (!canSpin.value) return;
 
+    balance.value -= bet.value;
+
     isSpinning.value = true;
     resultMessage.value = '';
 
