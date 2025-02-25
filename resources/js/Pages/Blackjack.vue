@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import Layout from '../Layouts/Layout.vue';
-import {usePage} from "@inertiajs/vue3";
+import { usePage } from "@inertiajs/vue3";
 
 const playerCards = ref([]);
 const dealerCards = ref([]);
@@ -78,63 +78,99 @@ const stand = async () => {
 
 <template>
     <Layout>
-        <div class="blackjack-game container mx-auto p-4">
-            <div class="balance mb-4 text-2xl font-bold text-white">
-                Balance: ${{ balance }}
+        <div class="max-w-lg mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+            <!-- Balance -->
+            <div class="text-center mb-6">
+                <div class="text-2xl font-bold text-yellow-400">
+                    BALANCE: ${{ balance }}
+                </div>
             </div>
 
-            <div class="bet-controls mb-4">
-                <input v-model.number="bet" type="number" min="10" max="1000"
-                       class="p-2 rounded bg-gray-800 text-white mr-2">
-                <button @click="startGame"
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-                    New Game
+            <!-- Bet Controls -->
+            <div class="flex justify-center gap-4 mb-6">
+                <input
+                    v-model.number="bet"
+                    type="number"
+                    min="10"
+                    max="1000"
+                    class="w-32 px-4 py-2 bg-gray-700 text-white rounded-lg text-center font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                >
+                <button
+                    @click="startGame"
+                    class="px-8 py-3 bg-yellow-400 text-gray-800 font-bold rounded-lg hover:bg-yellow-300 transition-transform duration-300 transform hover:scale-105"
+                >
+                    NEW GAME
                 </button>
             </div>
 
-            <div class="dealer-hand mb-8">
-                <h2 class="text-white text-xl mb-2">Dealer: {{ dealerScore }}</h2>
-                <div class="cards flex gap-2">
-                    <div v-for="(card, index) in dealerCards"
-                         :key="index"
-                         class="card"
-                         :class="{ 'hidden-card': card === 'hidden', 'revealed': index === 0 }">
+            <!-- Dealer Hand -->
+            <div class="mb-8">
+                <h2 class="text-center text-xl font-bold text-yellow-400 mb-4">
+                    DEALER: {{ dealerScore }}
+                </h2>
+                <div class="flex gap-4 justify-center">
+                    <div
+                        v-for="(card, index) in dealerCards"
+                        :key="index"
+                        class="w-20 h-28 bg-white rounded-lg p-2 shadow-lg flex flex-col relative"
+                        :class="{ 'bg-yellow-400': card === 'hidden' }"
+                    >
                         <template v-if="card !== 'hidden'">
-                            <div class="value">{{ card.replace(/[^0-9AJQK]/, '') }}</div>
-                            <div class="suit">{{ suitSymbols[card.slice(-1)] }}</div>
+                            <div class="absolute top-1 left-2 text-xl font-bold text-gray-800">
+                                {{ card.replace(/[^0-9AJQK]/, '') }}
+                            </div>
+                            <div class="flex-grow flex items-center justify-center text-3xl text-gray-800">
+                                {{ suitSymbols[card.slice(-1)] }}
+                            </div>
+                        </template>
+                        <template v-else>
+                            <div class="w-full h-full flex items-center justify-center text-3xl text-gray-800">?</div>
                         </template>
                     </div>
                 </div>
             </div>
 
-            <div class="player-hand mb-8">
-                <h2 class="text-white text-xl mb-2">Player: {{ playerScore }}</h2>
-                <div class="cards flex gap-2">
-                    <div v-for="(card, index) in playerCards"
-                         :key="index"
-                         class="card"
-                         :class="{ 'revealed': true }"
-                         :style="{ 'transition-delay': `${index * 0.2}s` }">
-                        <div class="value">{{ card.replace(/[^0-9AJQK]/, '') }}</div>
-                        <div class="suit">{{ suitSymbols[card.slice(-1)] }}</div>
+            <!-- Player Hand -->
+            <div class="mb-8">
+                <h2 class="text-center text-xl font-bold text-yellow-400 mb-4">
+                    PLAYER: {{ playerScore }}
+                </h2>
+                <div class="flex gap-4 justify-center">
+                    <div
+                        v-for="(card, index) in playerCards"
+                        :key="index"
+                        class="w-20 h-28 bg-white rounded-lg p-2 shadow-lg flex flex-col relative"
+                        :style="{ 'transition-delay': `${index * 0.2}s` }"
+                    >
+                        <div class="absolute top-1 left-2 text-xl font-bold text-gray-800">
+                            {{ card.replace(/[^0-9AJQK]/, '') }}
+                        </div>
+                        <div class="flex-grow flex items-center justify-center text-3xl text-gray-800">
+                            {{ suitSymbols[card.slice(-1)] }}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="controls flex gap-2">
-                <button @click="hit"
-                        :disabled="gameOver"
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50">
-                    Hit
+            <!-- Game Controls -->
+            <div class="flex justify-center gap-4">
+                <button
+                    @click="hit"
+                    :disabled="gameOver"
+                    class="px-8 py-3 bg-yellow-400 text-gray-800 font-bold rounded-lg hover:bg-yellow-300 transition-transform duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    HIT
                 </button>
-                <button @click="stand"
-                        :disabled="gameOver"
-                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50">
-                    Stand
+                <button
+                    @click="stand"
+                    :disabled="gameOver"
+                    class="px-8 py-3 bg-yellow-400 text-gray-800 font-bold rounded-lg hover:bg-yellow-300 transition-transform duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    STAND
                 </button>
             </div>
 
-            <div v-if="result" class="result mt-4 text-2xl font-bold text-yellow-400">
+            <div v-if="result" class="mt-6 text-center text-xl font-semibold text-yellow-400 animate-pulse">
                 {{ result }}
             </div>
         </div>
@@ -142,35 +178,4 @@ const stand = async () => {
 </template>
 
 <style scoped>
-.card {
-    @apply w-20 h-28 bg-white rounded-lg p-2 flex flex-col items-center justify-center
-    shadow-lg transform transition-all duration-500;
-    transform-style: preserve-3d;
-}
-
-.card.hidden-card {
-    @apply bg-red-500;
-}
-
-.card.hidden-card::before {
-    content: '🎴';
-    @apply text-3xl;
-}
-
-.value {
-    @apply text-2xl font-bold mb-2;
-}
-
-.suit {
-    @apply text-2xl;
-}
-
-.revealed {
-    animation: flip 0.6s ease-out forwards;
-}
-
-@keyframes flip {
-    0% { transform: rotateY(180deg); }
-    100% { transform: rotateY(0deg); }
-}
 </style>
