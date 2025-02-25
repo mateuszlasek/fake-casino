@@ -8,7 +8,8 @@ const playerCards = ref([]);
 const dealerCards = ref([]);
 const playerScore = ref(0);
 const dealerScore = ref(0);
-const gameOver = ref(false);
+// Ustawiamy gameOver na true, aby przyciski HIT i STAND były zablokowane, gdy gra nie jest aktywna
+const gameOver = ref(true);
 const bet = ref(10);
 const result = ref('');
 const balance = ref(usePage().props.auth?.user?.balance ?? 0);
@@ -27,6 +28,7 @@ const startGame = async () => {
         dealerCards.value = response.data.dealerCards;
         playerScore.value = response.data.playerScore;
         dealerScore.value = response.data.dealerScore;
+        // Rozpoczęcie gry – odblokowujemy przyciski
         gameOver.value = false;
         result.value = '';
         balance.value -= bet.value;
@@ -59,7 +61,7 @@ const stand = async () => {
 
         switch(response.data.result) {
             case 'player':
-                result.value = `You win $${bet.value * 1.5}!`;
+                result.value = `You win ${bet.value * 1.5} coins!`;
                 balance.value += bet.value * 2.5;
                 break;
             case 'dealer':
@@ -78,15 +80,13 @@ const stand = async () => {
 
 <template>
     <Layout>
-        <div class="max-w-lg mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
-            <!-- Balance -->
+        <div class="max-w-lg mx-auto p-6 bg-casino-2 rounded-lg shadow-lg">
             <div class="text-center mb-6">
                 <div class="text-2xl font-bold text-yellow-400">
-                    BALANCE: ${{ balance }}
+                    BALANCE: {{ balance }}
                 </div>
             </div>
 
-            <!-- Bet Controls -->
             <div class="flex justify-center gap-4 mb-6">
                 <input
                     v-model.number="bet"
@@ -103,7 +103,6 @@ const stand = async () => {
                 </button>
             </div>
 
-            <!-- Dealer Hand -->
             <div class="mb-8">
                 <h2 class="text-center text-xl font-bold text-yellow-400 mb-4">
                     DEALER: {{ dealerScore }}
@@ -130,7 +129,6 @@ const stand = async () => {
                 </div>
             </div>
 
-            <!-- Player Hand -->
             <div class="mb-8">
                 <h2 class="text-center text-xl font-bold text-yellow-400 mb-4">
                     PLAYER: {{ playerScore }}
@@ -152,7 +150,6 @@ const stand = async () => {
                 </div>
             </div>
 
-            <!-- Game Controls -->
             <div class="flex justify-center gap-4">
                 <button
                     @click="hit"
