@@ -7,7 +7,7 @@ import Layout from "@/Layouts/Layout.vue";
    <Layout>
        <div>
          <div class="container mx-auto flex flex-col md:flex-row items-center justify-between min-h-screen p-4">
-           <div class="w-full md:w-1/2 flex justify-center mx-5">
+           <div class="w-full md:w-1/2 flex justify-center mx-auto">
              <img src="/storage/images/cards_home.png" alt="Placeholder for dice and cards" class="rounded-lg shadow-lg">
            </div>
 

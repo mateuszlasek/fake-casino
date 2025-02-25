@@ -42,8 +42,7 @@ onMounted(() => {
     <div>
         <div class="min-h-screen bg-casino-1">
             <header class="bg-casino-2 text-white">
-                <nav class="flex items-center justify-between p-4 max-w-screen-lg mx-auto">
-                    <!-- Mobile menu button -->
+                <nav class="flex items-center justify-between p-4 max-w-screen-lg ml-auto">
                     <div class="flex md:hidden">
                         <button
                             @click="isMobileMenuOpen = !isMobileMenuOpen"
@@ -56,20 +55,14 @@ onMounted(() => {
                     </div>
 
                     <div class="hidden md:flex space-x-6">
-                        <Link href="/">Home</Link>
-                        <Link href="/about">About</Link>
-                        <Link href="/casino">Casino</Link>
-                        <Link href="/contact">Contact</Link>
+                        <Link href="/" class="hover:text-yellow-400 transition duration-300 ease-in-out">Home</Link>
+                        <Link href="/about" class="hover:text-yellow-400 transition duration-300 ease-in-out">About</Link>
+                        <Link href="/casino" class="hover:text-yellow-400 transition duration-300 ease-in-out">Casino</Link>
+                        <Link href="/contact" class="hover:text-yellow-400 transition duration-300 ease-in-out">Contact</Link>
                     </div>
 
-                    <!-- User actions -->
                     <div class="flex items-center space-x-6">
                         <template v-if="isLoggedIn">
-                            <div class="hidden md:flex items-center space-x-2 text-yellow-400">
-                                <Coins class="w-5 h-5"/>
-                                <span class="font-semibold">{{ balance }}</span>
-                            </div>
-
                             <div class="flex items-center space-x-4">
                                 <Link :href="route('dashboard')" class="hover:text-yellow-400">
                                     <User class="w-5 h-5"/>
@@ -77,7 +70,7 @@ onMounted(() => {
                                 <Link
                                     :href="route('logout')"
                                     method="post"
-                                    class="hover:text-yellow-400"
+                                    class="hover:text-yellow-400 flex"
                                 >
                                     <LogOut class="w-5 h-5"/>
                                     <span class="hidden md:inline ml-2">Logout</span>
