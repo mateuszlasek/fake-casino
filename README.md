@@ -24,4 +24,3 @@ A modern web-based casino built with **Laravel** (backend) and **Vue.js** (front
 - **Frontend:** Vue.js, Tailwind CSS  
 - **Real-Time Updates:** Pusher  
 - **Authentication:** Laravel Breeze with Inertia.js  
-- **Database:** MySQL  
