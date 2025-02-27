@@ -23,7 +23,7 @@ A modern web-based casino built with **Laravel** (backend) and **Vue.js** (front
 - **Set Game Configurations** – Adjust game parameters.  
 
 ## 🛠️ Tech Stack  
-- **Backend:** Laravel, PHP, MySQL  
+- **Backend:** Laravel, PHP
 - **Frontend:** Vue.js, Tailwind CSS  
 - **Real-Time Updates:** Pusher  
 - **Authentication:** Laravel Breeze with Inertia.js  
