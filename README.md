@@ -5,9 +5,12 @@ A modern web-based casino built with **Laravel** (backend) and **Vue.js** (front
 ## 🚀 Features  
 
 ### 🎮 Casino Games  
-- **Real-Time Roulette** – Uses **Pusher** for live game updates.  
-- **Slots** – A simple and interactive slot machine.  
-- **Blackjack** – Play against the dealer in a classic card game.  
+- **Real-Time Roulette** – Uses **Pusher** for live game updates.
+  ![](roulette_view.jpg)
+- **Slots** – A simple and interactive slot machine.
+    ![](slots_view.jpg)
+- **Blackjack** – Play against the dealer in a classic card game.
+  ![](blackjack_view.jpg)  
 
 ### 🔐 User System  
 - **User Registration & Authentication**  
