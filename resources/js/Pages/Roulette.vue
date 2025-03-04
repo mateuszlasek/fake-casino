@@ -161,7 +161,7 @@ export default {
     methods: {
         async fetchHistory() {
             try {
-                const response = await axios.get("/get-history");
+                const response = await axios.get("/roulette/history");
                 this.historyColors = response.data;
             } catch (error) {
                 console.error("Błąd podczas pobierania historii:", error);
@@ -170,7 +170,7 @@ export default {
         async initiateSpin() {
             if (this.spinning) return;
             try {
-                await axios.post("/spin-wheel");
+                await axios.post("/roulette/spin-wheel");
             } catch (error) {
                 alert("Wystąpił błąd podczas obracania ruletki.");
                 this.spinning = false;
@@ -215,13 +215,13 @@ export default {
                 this.updateBalance();
                 this.spinning = false;
                 this.fetchHistory();
-                axios.post("/clear-spin");
+                axios.post("/roulette/clear-spin");
             }, duration);
         },
         async placeBet(color) {
             if (this.spinning) return;
             try {
-                const response = await axios.post("/place-bet", {
+                const response = await axios.post("/roulette/place-bet", {
                     color: color,
                     amount: this.betAmount,
                 });
@@ -274,7 +274,7 @@ export default {
         },
         async fetchCurrentSpin() {
             try {
-                const response = await axios.get("/get-current-spin");
+                const response = await axios.get("/roulette/current-spin");
                 if (response.data.spinning && response.data.startTime) {
                     const formattedStartTime =
                         response.data.startTime.replace(" ", "T") + "Z";

@@ -74,7 +74,7 @@ class RouletteService
         }
     }
 
-    private function getColorByNumber(int $number): string
+    public function getColorByNumber(int $number): string
     {
         if ($number === 0) {
             return 'green';
