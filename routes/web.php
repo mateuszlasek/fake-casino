@@ -23,10 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/slots', [SlotController::class, 'index'])->name('slots');
     Route::post('/spin', [SlotController::class, 'spin'])->name('slots.spin');
 
-    Route::prefix('balance')->group(function () {
-        Route::post('/assign', [BalanceController::class, 'assignBalance'])->name('balance.assign');
-        Route::get('/current', [BalanceController::class, 'getBalance'])->name('balance.get');
-    });
+    Route::post('/assign-balance', [BalanceController::class, 'assignBalance'])->name('balance.assign');
+    Route::get('/get-balance', [BalanceController::class, 'getBalance'])->name('balance.get');
 
     Route::prefix('roulette')->group(function () {
         Route::get('/', [RouletteController::class, 'showRoulettePage'])->name('roulette');

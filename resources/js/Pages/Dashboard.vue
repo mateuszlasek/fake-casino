@@ -61,11 +61,11 @@ const assignBalance = () => {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <table class="w-full border-collapse border border-gray-300">
+                <div class="overflow-hidden bg-casino-2 shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-white">
+                        <table class="w-full border-collapse border border-white">
                             <thead>
-                            <tr class="bg-gray-200">
+                            <tr class="bg-casino-2">
                                 <th class="px-4 py-2 border">ID</th>
                                 <th class="px-4 py-2 border">Name</th>
                                 <th class="px-4 py-2 border">Email</th>
@@ -74,7 +74,7 @@ const assignBalance = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="user in users" :key="user.id" class="hover:bg-gray-100">
+                            <tr v-for="user in users" :key="user.id">
                                 <td class="px-4 py-2 border">{{ user.id }}</td>
                                 <td class="px-4 py-2 border">{{ user.name }}</td>
                                 <td class="px-4 py-2 border">{{ user.email }}</td>
